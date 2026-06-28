@@ -10,7 +10,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 
 from apps.accounts.managers import UserManager
 from apps.common.utils import avatar_upload_path
@@ -55,7 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_2fa_enabled = models.BooleanField(default=False)
 
     # Timestamps
-    date_joined = models.DateTimeField(default=timezone.now)
+    date_joined = models.DateTimeField(default=django_timezone.now)
     last_login_at = models.DateTimeField(null=True, blank=True)
 
     objects = UserManager()
@@ -107,7 +107,7 @@ class EmailVerificationToken(models.Model):
 
     @property
     def is_expired(self):
-        return timezone.now() > self.expires_at
+        return django_timezone.now() > self.expires_at
 
     @property
     def is_used(self):
@@ -141,7 +141,7 @@ class PasswordResetToken(models.Model):
 
     @property
     def is_expired(self):
-        return timezone.now() > self.expires_at
+        return django_timezone.now() > self.expires_at
 
     @property
     def is_valid(self):

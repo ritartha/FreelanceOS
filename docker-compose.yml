@@ -67,6 +67,21 @@ services:
         condition: service_healthy
 
   # ==========================================================================
+  # Nginx Reverse Proxy
+  # ==========================================================================
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./backend:/app:ro
+    depends_on:
+      - web
+
+  # ==========================================================================
   # Celery Worker
   # ==========================================================================
   celery_worker:

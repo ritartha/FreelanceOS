@@ -10,6 +10,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from decouple import Csv, config
+import dj_database_url
 
 # =============================================================================
 # Paths
@@ -132,8 +133,6 @@ ASGI_APPLICATION = "config.asgi.application"
 # =============================================================================
 # Database
 # =============================================================================
-
-import dj_database_url
 
 DATABASES = {
     "default": dj_database_url.config(
