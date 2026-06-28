@@ -1,6 +1,9 @@
 """
 Production settings for FreelanceOS.
+Optimised for Railway deployment.
 """
+
+import os
 
 from decouple import config
 
@@ -14,11 +17,22 @@ DEBUG = False
 
 SECRET_KEY = config("DJANGO_SECRET_KEY")
 
-ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")])
+ALLOWED_HOSTS = config(
+    "DJANGO_ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")]
+)
 
-# HTTPS
-SECURE_SSL_REDIRECT = True
+# Railway sets this for the running service port;
+# gunicorn should bind to $PORT.
+PORT = config("PORT", default="8000")
+RAILWAY_ENVIRONMENT = config("RAILWAY_ENVIRONMENT", default="")
+IS_RAILWAY = bool(RAILWAY_ENVIRONMENT)
+
+# Railway terminates SSL at the proxy layer — do NOT redirect to HTTPS here
+# as it causes infinite redirect loops.
+# Trust the forwarded proto header instead.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = False
+
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
@@ -38,21 +52,27 @@ DATABASES["default"]["CONN_MAX_AGE"] = 600  # noqa: F405
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
 
 # =============================================================================
-# Static Files
+# Static Files (WhiteNoise — Railway has no dedicated static server)
 # =============================================================================
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# Ensure collectstatic doesn't fail
+# if the local static source dir doesn't exist.
+STATICFILES_DIRS = [
+    d for d in STATICFILES_DIRS if os.path.isdir(d)  # noqa: F405
+]
+
 # =============================================================================
-# Sentry
+# Sentry (optional — set SENTRY_DSN in Railway env vars)
 # =============================================================================
 
 SENTRY_DSN = config("SENTRY_DSN", default="")
 
 if SENTRY_DSN:
     import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.redis import RedisIntegration
 
     sentry_sdk.init(
@@ -64,7 +84,7 @@ if SENTRY_DSN:
         ],
         traces_sample_rate=0.1,
         send_default_pii=False,
-        environment="production",
+        environment=config("RAILWAY_ENVIRONMENT", default="production"),
     )
 
 # =============================================================================
