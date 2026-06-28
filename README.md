@@ -1,130 +1,66 @@
 # FreelanceOS
 
-FreelanceOS is a Django-based platform for managing freelance operations, including authentication, CRM, projects, tasks, invoices, expenses, reporting, files, notifications, and background processing with Celery.
+FreelanceOS is a Django-based platform for managing freelance operations, including CRM, projects, invoicing, reporting, and asynchronous task processing with Celery.
 
-## Setup Options
+## Local Development (Python Virtual Environment)
 
-### Local Python environment (recommended)
-
-Run FreelanceOS directly from a Python virtual environment:
-
-1. Create dependencies and bootstrap the project:
+1. Create and activate the virtual environment:
    ```bash
-   make setup
+   make install
    ```
-   Or use the shell bootstrap:
+2. Copy environment variables:
    ```bash
-   bash backend/setup.sh
+   cp .env.example .env
    ```
-2. Edit `.env` with your local database and Redis settings if needed.
-3. Start infrastructure only, if you want PostgreSQL and Redis from Docker:
+3. Run database migrations:
    ```bash
-   make services-up
+   make migrate
    ```
-4. Run the Django server:
+4. Create a superuser:
+   ```bash
+   make superuser
+   ```
+5. Start the app:
    ```bash
    make run
    ```
 
-### Docker (alternative)
+Optional:
+- Celery worker: `make worker`
+- Celery beat: `make beat`
+- Use `CELERY_EAGER=True` in `.env` to run tasks synchronously without a worker.
 
-Run the full application stack in containers:
+## Railway Deployment (Primary)
 
-```bash
-docker compose --profile docker up
-```
+1. Push your code to GitHub.
+2. In Railway, create a new project and choose **Deploy from GitHub repo**.
+3. Add a **PostgreSQL** plugin (Railway auto-injects `DATABASE_URL`).
+4. Add a **Redis** plugin (Railway auto-injects `REDIS_URL`).
+5. Set required environment variables in the Railway dashboard:
+   - `DJANGO_SETTINGS_MODULE=config.settings.production`
+   - `DJANGO_SECRET_KEY=<generate a strong key>`
+   - `DJANGO_ALLOWED_HOSTS=<your-app>.railway.app`
+   - `CELERY_BROKER_URL=$REDIS_URL`
+   - `CELERY_RESULT_BACKEND=$REDIS_URL`
+6. Set the start command:
+   ```bash
+   cd backend && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+   ```
+7. Railway will automatically deploy on each push.
 
-For local Python development with only infrastructure containers:
+### Railway Environment Variables
 
-```bash
-docker compose --profile services up -d
-```
-
-## Local setup details
-
-- Python: 3.12+
-- Virtual environment path: `backend/.venv`
-- Install dependencies:
-  ```bash
-  make install
-  ```
-- Run migrations:
-  ```bash
-  make migrate
-  ```
-- Create a superuser:
-  ```bash
-  make superuser
-  ```
-- Start a Celery worker:
-  ```bash
-  make worker
-  ```
-- Start Celery beat:
-  ```bash
-  make beat
-  ```
-
-## Key environment variables
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `DJANGO_SETTINGS_MODULE` | `config.settings.local` | Active Django settings module |
-| `DATABASE_URL` | `******localhost:5432/freelanceos` | Database connection string |
-| `REDIS_URL` | `redis://localhost:6379/0` | Redis cache/session connection |
-| `CELERY_BROKER_URL` | `redis://localhost:6379/1` | Celery broker |
-| `CELERY_RESULT_BACKEND` | `redis://localhost:6379/2` | Celery result backend |
-| `USE_REDIS_CACHE` | `True` | Set to `False` to use in-memory Django cache locally |
-| `CELERY_EAGER` | `False` | Set to `True` to execute Celery tasks synchronously |
-| `DJANGO_DEBUG` | `True` | Enables debug mode |
-
-## Available `make` commands
-
-| Command | Description |
+| Variable | Value |
 | --- | --- |
-| `make venv` | Create the virtual environment |
-| `make install` | Install local dependencies |
-| `make setup` | Install deps, copy `.env`, migrate, and create a superuser |
-| `make run` | Start the Django development server |
-| `make worker` | Start the Celery worker |
-| `make beat` | Start the Celery beat scheduler |
-| `make migrate` | Run database migrations |
-| `make makemigrations` | Create new migrations |
-| `make resetdb` | Drop and recreate the database |
-| `make test` | Run the test suite |
-| `make test-cov` | Run tests with coverage |
-| `make lint` | Run flake8 |
-| `make format` | Run black and isort |
-| `make check-format` | Check black and isort formatting |
-| `make check` | Run Django system checks |
-| `make collectstatic` | Collect static files |
-| `make shell` | Open `shell_plus` |
-| `make show-urls` | List registered URL patterns |
-| `make services-up` | Start only PostgreSQL and Redis via Docker |
-| `make services-down` | Stop PostgreSQL and Redis Docker services |
+| `DJANGO_SETTINGS_MODULE` | `config.settings.production` |
+| `DJANGO_SECRET_KEY` | `<generate a strong key>` |
+| `DJANGO_ALLOWED_HOSTS` | `<your-app>.railway.app` |
+| `CELERY_BROKER_URL` | `$REDIS_URL` |
+| `CELERY_RESULT_BACKEND` | `$REDIS_URL` |
+| `CSRF_TRUSTED_ORIGINS` | `https://<your-app>.railway.app` |
+| `CORS_ALLOWED_ORIGINS` | `https://<your-app>.railway.app` |
+| `RAILWAY_ENVIRONMENT` | `production` |
 
-## API endpoints overview
+### Procfile Note
 
-Authentication endpoints are exposed under `/api/v1/auth/`:
-
-- `POST /api/v1/auth/register/`
-- `POST /api/v1/auth/login/`
-- `POST /api/v1/auth/logout/`
-- `POST /api/v1/auth/token/refresh/`
-- `POST /api/v1/auth/verify-email/`
-- `POST /api/v1/auth/password/reset-request/`
-- `POST /api/v1/auth/password/reset/`
-- `POST /api/v1/auth/password/change/`
-- `GET /api/v1/auth/me/`
-
-## Tech stack
-
-- Django 5.1
-- Django REST Framework
-- PostgreSQL
-- Redis
-- Celery + django-celery-beat
-- pytest
-- flake8, black, isort
-- WhiteNoise
-- WeasyPrint
+This repository includes a root `Procfile` defining `web`, `worker`, and `beat` process types for Railway and other Procfile-compatible platforms.

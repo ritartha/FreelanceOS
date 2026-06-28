@@ -1,1 +1,5 @@
 -r base.txt
+
+# Railway / Production server
+# gunicorn is already in base.txt — Railway uses it as the start command
+# psycopg[binary] is already in base.txt — used for PostgreSQL on Railway

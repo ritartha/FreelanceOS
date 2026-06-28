@@ -27,7 +27,9 @@ INSTALLED_APPS += [  # noqa: F405
 # Middleware (Debug Toolbar)
 # =============================================================================
 
-MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
+MIDDLEWARE.insert(  # noqa: F405
+    0, "debug_toolbar.middleware.DebugToolbarMiddleware"
+)
 
 INTERNAL_IPS = ["127.0.0.1", "localhost"]
 
@@ -50,20 +52,8 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 CORS_ALLOW_ALL_ORIGINS = True
 
 # =============================================================================
-# Cache
-# =============================================================================
-
-USE_REDIS_CACHE = config("USE_REDIS_CACHE", default=True, cast=bool)
-
-if not USE_REDIS_CACHE:
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        }
-    }
-
-# =============================================================================
 # Celery — set CELERY_EAGER=True in .env to run tasks synchronously
+# (no worker needed)
 # =============================================================================
 
 if config("CELERY_EAGER", default=False, cast=bool):

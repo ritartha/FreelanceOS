@@ -2,7 +2,7 @@
 # FreelanceOS — Developer Makefile
 # =============================================================================
 # Usage: make <target>
-# Requires: Python 3.12+, PostgreSQL, Redis (or USE_REDIS_CACHE=False)
+# Requires: Python 3.12+, PostgreSQL, Redis
 # =============================================================================
 
 PYTHON     := python3
@@ -108,15 +108,20 @@ superuser:  ## Create a superuser interactively
 show-urls:  ## List all registered URL patterns
 	$(MANAGE) show_urls
 
-# ---- Docker (infrastructure only) ------------------------------------------
+.PHONY: railway-vars
+railway-vars:  ## Print the Railway environment variables you need to set
+	@echo "Set these in your Railway service dashboard:"
+	@echo "  DJANGO_SETTINGS_MODULE=config.settings.production"
+	@echo "  DJANGO_SECRET_KEY=<run: python -c \"import secrets; print(secrets.token_urlsafe(50))\">"
+	@echo "  DJANGO_ALLOWED_HOSTS=<your-app>.railway.app"
+	@echo "  CELERY_BROKER_URL=\$${{REDIS_URL}}"
+	@echo "  CELERY_RESULT_BACKEND=\$${{REDIS_URL}}"
+	@echo "  CSRF_TRUSTED_ORIGINS=https://<your-app>.railway.app"
+	@echo "  CORS_ALLOWED_ORIGINS=https://<your-app>.railway.app"
 
-.PHONY: services-up
-services-up:  ## Start only PostgreSQL + Redis via Docker (no Django container)
-	docker compose up postgres redis -d
-
-.PHONY: services-down
-services-down:  ## Stop PostgreSQL + Redis Docker services
-	docker compose stop postgres redis
+.PHONY: secret-key
+secret-key:  ## Generate a new Django secret key
+	@$(VENV)/bin/python -c "import secrets; print(secrets.token_urlsafe(50))"
 
 # ---- Help -------------------------------------------------------------------
 
