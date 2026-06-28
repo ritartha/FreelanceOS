@@ -2,6 +2,8 @@
 Local development settings for FreelanceOS.
 """
 
+from decouple import config
+
 from .base import *  # noqa: F401,F403
 
 # =============================================================================
@@ -29,12 +31,6 @@ MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa:
 
 INTERNAL_IPS = ["127.0.0.1", "localhost"]
 
-# For Docker, allow all IPs to access debug toolbar
-import socket
-
-hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
-
 # =============================================================================
 # Email
 # =============================================================================
@@ -54,23 +50,25 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 CORS_ALLOW_ALL_ORIGINS = True
 
 # =============================================================================
-# Cache (use local memory in dev if Redis is unavailable)
+# Cache
 # =============================================================================
 
-# Override if you want to skip Redis locally:
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-#     }
-# }
+USE_REDIS_CACHE = config("USE_REDIS_CACHE", default=True, cast=bool)
+
+if not USE_REDIS_CACHE:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
 
 # =============================================================================
-# Celery (eager mode for easier debugging)
+# Celery — set CELERY_EAGER=True in .env to run tasks synchronously
 # =============================================================================
 
-# Uncomment to run tasks synchronously during dev:
-# CELERY_TASK_ALWAYS_EAGER = True
-# CELERY_TASK_EAGER_PROPAGATES = True
+if config("CELERY_EAGER", default=False, cast=bool):
+    CELERY_TASK_ALWAYS_EAGER = True  # noqa: F405
+    CELERY_TASK_EAGER_PROPAGATES = True  # noqa: F405
 
 # =============================================================================
 # Logging
