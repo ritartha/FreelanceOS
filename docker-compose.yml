@@ -1,11 +1,16 @@
 version: "3.8"
 
+# Use `docker compose --profile services up -d` for local Python development
+# with only PostgreSQL and Redis, or `docker compose --profile docker up`
+# for the full containerized application stack.
+
 services:
   # ==========================================================================
   # PostgreSQL Database
   # ==========================================================================
   postgres:
     image: postgres:16-alpine
+    profiles: ["services", "docker"]
     restart: unless-stopped
     environment:
       POSTGRES_DB: freelanceos
@@ -26,6 +31,7 @@ services:
   # ==========================================================================
   redis:
     image: redis:7-alpine
+    profiles: ["services", "docker"]
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -44,6 +50,7 @@ services:
     build:
       context: .
       dockerfile: docker/django/Dockerfile
+    profiles: ["docker"]
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
@@ -73,6 +80,7 @@ services:
     build:
       context: .
       dockerfile: docker/nginx/Dockerfile
+    profiles: ["docker"]
     restart: unless-stopped
     ports:
       - "80:80"
@@ -88,6 +96,7 @@ services:
     build:
       context: .
       dockerfile: docker/django/Dockerfile
+    profiles: ["docker"]
     command: celery -A config worker -l info --concurrency=2 -Q default,emails,notifications,pdf_generation,billing,reports
     volumes:
       - ./backend:/app
@@ -112,6 +121,7 @@ services:
     build:
       context: .
       dockerfile: docker/django/Dockerfile
+    profiles: ["docker"]
     command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - ./backend:/app
