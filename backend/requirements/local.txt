@@ -1,0 +1,18 @@
+-r base.txt
+
+# Development & Debugging
+django-debug-toolbar>=4.0
+django-extensions>=3.2
+
+# Testing
+factory-boy>=3.3
+faker>=25.0
+pytest-django>=4.8
+pytest>=8.0
+pytest-cov>=5.0
+coverage>=7.0
+
+# Code Quality
+flake8>=7.0
+black>=24.0
+isort>=5.0
