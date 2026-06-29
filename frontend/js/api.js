@@ -68,7 +68,7 @@ class ApiService {
       // Handle custom error structure: {"success": false, "error": {"message": "..."}}
       if (!response.ok) {
         if (response.status === 401 && this.token) {
-          // Token expired, handle refresh here in a real app, for now just logout
+          // Token expired — clear session and redirect to login
           this.clearSession();
           window.location.href = 'index.html';
         }
@@ -89,7 +89,9 @@ class ApiService {
     }
   }
 
-  // --- Auth Endpoints ---
+  // ---------------------------------------------------------------------------
+  // Auth
+  // ---------------------------------------------------------------------------
 
   async login(email, password) {
     const data = await this.fetch('/auth/login/', {
@@ -107,7 +109,7 @@ class ApiService {
         email,
         password,
         first_name: firstName,
-        last_name: lastName
+        last_name: lastName,
       }),
     });
     this.setSession(data);
@@ -128,10 +130,145 @@ class ApiService {
     this.clearSession();
   }
 
-  // --- Dashboard Data Endpoints ---
+  async getMe() {
+    return this.fetch('/auth/me/');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Dashboard
+  // ---------------------------------------------------------------------------
 
   async getDashboardSummary() {
     return this.fetch('/dashboard/summary/');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Clients  (CRM)
+  // ---------------------------------------------------------------------------
+
+  /** List all clients. Supports optional query params, e.g. { status: 'active' } */
+  async getClients(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.fetch(`/crm/clients/${qs ? '?' + qs : ''}`);
+  }
+
+  /** Fetch a single client by UUID. */
+  async getClient(id) {
+    return this.fetch(`/crm/clients/${id}/`);
+  }
+
+  /** Create a new client. */
+  async createClient(data) {
+    return this.fetch('/crm/clients/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /** Partially update a client. */
+  async updateClient(id, data) {
+    return this.fetch(`/crm/clients/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /** Delete a client. */
+  async deleteClient(id) {
+    return this.fetch(`/crm/clients/${id}/`, { method: 'DELETE' });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Contacts  (CRM)
+  // ---------------------------------------------------------------------------
+
+  async getContacts(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.fetch(`/crm/contacts/${qs ? '?' + qs : ''}`);
+  }
+
+  async getContact(id) {
+    return this.fetch(`/crm/contacts/${id}/`);
+  }
+
+  async createContact(data) {
+    return this.fetch('/crm/contacts/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateContact(id, data) {
+    return this.fetch(`/crm/contacts/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteContact(id) {
+    return this.fetch(`/crm/contacts/${id}/`, { method: 'DELETE' });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Projects
+  // ---------------------------------------------------------------------------
+
+  async getProjects(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.fetch(`/projects/${qs ? '?' + qs : ''}`);
+  }
+
+  async getProject(id) {
+    return this.fetch(`/projects/${id}/`);
+  }
+
+  async createProject(data) {
+    return this.fetch('/projects/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateProject(id, data) {
+    return this.fetch(`/projects/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteProject(id) {
+    return this.fetch(`/projects/${id}/`, { method: 'DELETE' });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Invoices
+  // ---------------------------------------------------------------------------
+
+  async getInvoices(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.fetch(`/invoices/${qs ? '?' + qs : ''}`);
+  }
+
+  async getInvoice(id) {
+    return this.fetch(`/invoices/${id}/`);
+  }
+
+  async createInvoice(data) {
+    return this.fetch('/invoices/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateInvoice(id, data) {
+    return this.fetch(`/invoices/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteInvoice(id) {
+    return this.fetch(`/invoices/${id}/`, { method: 'DELETE' });
   }
 }
 

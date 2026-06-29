@@ -6,6 +6,7 @@ password reset, and session management.
 """
 
 import logging
+import re
 
 from django.contrib.auth import authenticate
 from django.db import transaction
@@ -29,8 +30,9 @@ def register_user(email, password, first_name, last_name, **extra_fields):
     """
     Register a new user account.
 
-    Creates the user with is_email_verified=False and generates
-    an email verification token.
+    Creates the user with is_email_verified=False, generates an email
+    verification token, and bootstraps a personal Tenant + Owner Membership
+    so that TenantContextMiddleware always resolves a tenant after sign-up.
 
     Returns:
         tuple: (user, verification_token)
@@ -47,6 +49,39 @@ def register_user(email, password, first_name, last_name, **extra_fields):
         last_name=last_name,
         **extra_fields,
     )
+
+    # --- Bootstrap personal workspace ---
+    from apps.tenants.models import Membership, Role, Tenant
+
+    # Build a URL-safe slug from the local part of the email, deduplicated
+    slug_base = re.sub(r"[^a-z0-9]+", "-", email.split("@")[0].lower()).strip("-")
+    slug = slug_base
+    counter = 1
+    while Tenant.objects.filter(slug=slug).exists():
+        slug = f"{slug_base}-{counter}"
+        counter += 1
+
+    tenant = Tenant.objects.create(
+        name=f"{first_name}'s Workspace",
+        slug=slug,
+        owner=user,
+    )
+
+    # Each tenant gets its own "Owner" role
+    owner_role = Role.objects.create(
+        tenant=tenant,
+        name="Owner",
+        permissions={},
+    )
+
+    Membership.objects.create(
+        user=user,
+        tenant=tenant,
+        role=owner_role,
+        status=Membership.StatusChoices.ACTIVE,
+        joined_at=timezone.now(),
+    )
+    # --- End bootstrap ---
 
     verification_token = generate_verification_token(user)
 
