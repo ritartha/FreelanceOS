@@ -17,17 +17,43 @@ class TenantQuerysetMixin:
     Also auto-sets tenant and created_by/updated_by on create/update.
     """
 
+    def _resolve_tenant(self):
+        if getattr(self.request, "tenant", None):
+            return self.request.tenant
+            
+        # In DRF, request.user might be resolved after middleware runs (e.g. JWT)
+        if self.request.user and self.request.user.is_authenticated:
+            from apps.tenants.models import Membership
+            membership = Membership.objects.filter(
+                user=self.request.user, 
+                status="active", 
+                tenant__is_active=True
+            ).order_by("-created_at").first()
+            
+            if membership:
+                self.request.membership = membership
+                self.request.tenant = membership.tenant
+                return membership.tenant
+                
+        return None
+
     def get_queryset(self):
         """Filter queryset by the current tenant."""
         qs = super().get_queryset()
-        if hasattr(self.request, "tenant") and self.request.tenant:
-            return qs.filter(tenant=self.request.tenant)
+        tenant = self._resolve_tenant()
+        if tenant:
+            return qs.filter(tenant=tenant)
+            
         raise TenantRequiredError()
 
     def perform_create(self, serializer):
         """Auto-set tenant and created_by on create."""
+        tenant = self._resolve_tenant()
+        if not tenant:
+            raise TenantRequiredError()
+            
         serializer.save(
-            tenant=self.request.tenant,
+            tenant=tenant,
             created_by=self.request.user,
         )
 
@@ -47,7 +73,7 @@ class AuditMixin:
 
     def perform_create(self, serializer):
         instance = serializer.save(
-            tenant=self.request.tenant,
+            tenant=getattr(self.request, "tenant", None),
             created_by=self.request.user,
         )
         self._log_audit("create", instance)

@@ -73,18 +73,22 @@ class ApiService {
           window.location.href = 'index.html';
         }
         
-        const errorMsg = data?.error?.message || data?.detail || 'An error occurred';
+        const errorMsg = data?.error?.message || data?.detail || data?.general?.[0] || data?.general || data?.error || 'An error occurred';
         throw new Error(errorMsg);
       }
 
       // Unwrap success response: {"success": true, "data": {...}}
       if (data && data.success !== undefined) {
-        return data.data;
+        // If the success envelope is used but data is undefined, fallback to the entire object
+        return data.data !== undefined ? data.data : data;
       }
 
       return data;
     } catch (error) {
       console.error(`API Error on ${endpoint}:`, error);
+      if (error.name === 'TypeError') {
+        throw new Error("Unable to connect to the server (CORS or network error). Is the backend running?");
+      }
       throw error;
     }
   }

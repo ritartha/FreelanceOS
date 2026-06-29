@@ -48,6 +48,30 @@ def register_user(email, password, first_name, last_name, **extra_fields):
         **extra_fields,
     )
 
+    # Auto-provision a default workspace for the new user
+    import uuid
+    from apps.tenants.models import Tenant, Role, Membership
+    from django.utils.text import slugify
+    
+    tenant_name = f"{first_name}'s Workspace"
+    tenant_slug = slugify(tenant_name) + "-" + uuid.uuid4().hex[:6]
+    
+    tenant = Tenant.objects.create(
+        name=tenant_name,
+        slug=tenant_slug,
+        owner=user,
+        plan="free",
+        is_active=True
+    )
+    
+    role, _ = Role.objects.get_or_create(tenant=tenant, name="Owner")
+    Membership.objects.create(
+        user=user,
+        tenant=tenant,
+        role=role,
+        status="active"
+    )
+
     verification_token = generate_verification_token(user)
 
     logger.info(f"User registered: {user.email}")
