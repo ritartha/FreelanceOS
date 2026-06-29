@@ -104,6 +104,10 @@ check:  ## Run Django system checks
 superuser:  ## Create a superuser interactively
 	$(MANAGE) createsuperuser
 
+.PHONY: ensure-superuser
+ensure-superuser:  ## Create superuser from env vars (non-interactive, for CI/deployment)
+	$(MANAGE) ensure_superuser
+
 .PHONY: show-urls
 show-urls:  ## List all registered URL patterns
 	$(MANAGE) show_urls
