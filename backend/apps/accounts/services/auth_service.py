@@ -70,6 +70,11 @@ def login_user(email, password, request=None):
     if user is None:
         raise ValidationError(message="Invalid email or password.")
 
+    return issue_tokens_for_user(user, request=request)
+
+
+def issue_tokens_for_user(user, request=None):
+    """Issue JWT tokens for an already-authenticated user."""
     if not user.is_active:
         raise ValidationError(message="This account has been deactivated.")
 

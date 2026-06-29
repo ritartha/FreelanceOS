@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 
 from apps.accounts.services import auth_service
 
@@ -29,9 +30,14 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        user = authenticate(email=attrs["email"], **{"password": attrs["password"]})
+        email = attrs.get("email", "").lower().strip()
+        credentials = {"email": email, "password": attrs.get("password", "")}
+        user = authenticate(**credentials)
         if not user:
-            raise serializers.ValidationError("Invalid credentials.")
+            raise AuthenticationFailed("Invalid email or password.")
+        if not user.is_active:
+            raise AuthenticationFailed("This account has been deactivated.")
+        attrs["email"] = email
         attrs["user"] = user
         return attrs
 

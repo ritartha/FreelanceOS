@@ -34,11 +34,8 @@ class LoginAPIView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = auth_service.login_user(
-            email=serializer.validated_data["email"],
-            **{"password": serializer.validated_data["password"]},
-            request=request,
-        )
+        user = serializer.validated_data["user"]
+        data = auth_service.issue_tokens_for_user(user, request=request)
         return Response(
             {
                 "user": UserProfileSerializer(data["user"]).data,

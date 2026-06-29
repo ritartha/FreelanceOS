@@ -13,6 +13,11 @@ class ApiService {
   }
 
   setSession(data) {
+    if (!data || !data.access_token || !data.refresh_token) {
+      console.error('setSession called with invalid data', data);
+      return;
+    }
+
     this.token = data.access_token;
     this.refreshToken = data.refresh_token;
     this.user = data.user;
