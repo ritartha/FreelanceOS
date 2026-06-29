@@ -5,5 +5,10 @@ from apps.audit.models import AuditLog
 
 
 class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = AuditLog.objects.all()
     serializer_class = AuditLogSerializer
+
+    def get_queryset(self):
+        tenant = getattr(self.request, "tenant", None)
+        if tenant:
+            return AuditLog.objects.filter(tenant=tenant)
+        return AuditLog.objects.none()

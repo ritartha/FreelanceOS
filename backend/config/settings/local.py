@@ -65,3 +65,21 @@ if config("CELERY_EAGER", default=False, cast=bool):
 # =============================================================================
 
 LOGGING["loggers"]["apps"]["level"] = "DEBUG"  # noqa: F405
+
+# =============================================================================
+# Bypass Redis on Windows Dev Environment
+# =============================================================================
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_CACHE_ALIAS = "default"
+
+# Force celery to be eager so it doesn't try to connect to redis
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True

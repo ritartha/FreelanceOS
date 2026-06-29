@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome | FreelanceOS</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="auth-wrapper">
+    <div class="auth-card glass-panel">
+      
+      <div id="global-alert" class="alert"></div>
+
+      <!-- Login Form -->
+      <div id="login-view">
+        <div class="auth-header">
+          <h1>FreelanceOS</h1>
+          <p>Sign in to your workspace</p>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email Address</label>
+            <input type="email" id="login-email" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block mt-4" id="btn-login">Sign In</button>
+        </form>
+
+        <div class="auth-footer">
+          Don't have an account? <a href="#" id="link-to-register">Create one</a>
+        </div>
+      </div>
+
+      <!-- Registration Form -->
+      <div id="register-view" class="hidden">
+        <div class="auth-header">
+          <h1>Join FreelanceOS</h1>
+          <p>Start managing your freelance business</p>
+        </div>
+
+        <form id="register-form">
+          <div class="form-group">
+            <label class="form-label" for="reg-firstname">First Name</label>
+            <input type="text" id="reg-firstname" class="form-input" placeholder="Jane" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-lastname">Last Name</label>
+            <input type="text" id="reg-lastname" class="form-input" placeholder="Doe" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" class="form-input" placeholder="jane@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-password">Password</label>
+            <input type="password" id="reg-password" class="form-input" placeholder="At least 8 characters" required minlength="8">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block mt-4" id="btn-register">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+          Already have an account? <a href="#" id="link-to-login">Sign in here</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Redirect if already logged in
+      if (api.isAuthenticated()) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      // View Toggles
+      const loginView = document.getElementById('login-view');
+      const registerView = document.getElementById('register-view');
+      
+      document.getElementById('link-to-register').addEventListener('click', (e) => {
+        e.preventDefault();
+        loginView.classList.add('hidden');
+        registerView.classList.remove('hidden');
+      });
+
+      document.getElementById('link-to-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        registerView.classList.add('hidden');
+        loginView.classList.remove('hidden');
+      });
+
+      // Login Flow
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const btn = document.getElementById('btn-login');
+
+        try {
+          showSpinner(btn);
+          await api.login(email, password);
+          window.location.href = 'dashboard.html';
+        } catch (error) {
+          showAlert(error.message, 'error');
+        } finally {
+          hideSpinner(btn);
+        }
+      });
+
+      // Registration Flow
+      document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const firstName = document.getElementById('reg-firstname').value;
+        const lastName = document.getElementById('reg-lastname').value;
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-password').value;
+        const btn = document.getElementById('btn-register');
+
+        try {
+          showSpinner(btn);
+          await api.register(email, password, firstName, lastName);
+          window.location.href = 'dashboard.html';
+        } catch (error) {
+          showAlert(error.message, 'error');
+        } finally {
+          hideSpinner(btn);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
