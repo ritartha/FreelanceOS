@@ -28,6 +28,7 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("dashboard/", include("apps.dashboard.urls", namespace="dashboard")),
     path("crm/", include("apps.crm.urls", namespace="crm")),
+    path("notes/", include("apps.notes.urls", namespace="notes")),
     path("projects/", include("apps.projects.urls", namespace="projects")),
     path("tasks/", include("apps.tasks.urls", namespace="tasks")),
     path("time-tracking/", include("apps.time_tracking.urls", namespace="time-tracking")),

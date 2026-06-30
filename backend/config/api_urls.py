@@ -14,6 +14,7 @@ urlpatterns = [
     path("tenants/", include("apps.tenants.api.urls", namespace="tenants-api")),
     path("audit/", include("apps.audit.api.urls", namespace="audit-api")),
     path("", include("apps.crm.api.urls", namespace="crm")),
+    path("", include("apps.notes.api.urls", namespace="notes")),
     path("projects/", include("apps.projects.api.urls", namespace="projects")),
     path("tasks/", include("apps.tasks.api.urls", namespace="tasks")),
     path("time-logs/", include("apps.time_tracking.api.urls", namespace="time-logs")),
