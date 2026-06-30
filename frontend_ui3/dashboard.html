@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | FreelanceOS</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1a1a2e;
+      border: 1px solid rgba(255,165,0,0.25);
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .modal h3 {
+      margin: 0 0 20px;
+      color: #ff9900;
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .modal .close-btn {
+      position: absolute;
+      top: 16px; right: 18px;
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+    .modal .close-btn:hover { color: #fff; }
+    .modal .form-group { margin-bottom: 14px; }
+    .modal .form-label {
+      display: block;
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .modal .form-input, .modal select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 7px;
+      padding: 9px 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .modal .form-input:focus, .modal select:focus {
+      outline: none;
+      border-color: #ff9900;
+    }
+    .modal select option { background: #1a1a2e; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+      justify-content: flex-end;
+    }
+    .btn-danger {
+      background: rgba(220,53,69,0.15);
+      border: 1px solid rgba(220,53,69,0.4);
+      color: #ff6b7a;
+      padding: 7px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+    .btn-danger:hover { background: rgba(220,53,69,0.3); }
+
+    /* ── Table action buttons ── */
+    .tbl-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 4px 9px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+    }
+    .tbl-btn-edit {
+      color: #60a5fa;
+      border-color: rgba(96,165,250,0.3);
+    }
+    .tbl-btn-edit:hover { background: rgba(96,165,250,0.12); }
+    .tbl-btn-delete {
+      color: #ff6b7a;
+      border-color: rgba(255,107,122,0.3);
+      margin-left: 4px;
+    }
+    .tbl-btn-delete:hover { background: rgba(255,107,122,0.12); }
+
+    /* ── Confirm delete overlay ── */
+    .confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 20000;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+      background: #1a1a2e;
+      border: 1px solid rgba(220,53,69,0.4);
+      border-radius: 10px;
+      padding: 28px 32px;
+      max-width: 360px;
+      text-align: center;
+    }
+    .confirm-box p { color: #ccc; margin: 0 0 20px; line-height: 1.5; }
+    .confirm-box .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+  </style>
+</head>
+<body>
+
+  <div id="global-alert" class="alert" style="position:fixed; top:20px; right:20px; z-index:9999; max-width:400px; display:none;"></div>
+
+  <!-- Create / Edit Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <button class="close-btn" id="modal-close">&times;</button>
+      <h3 id="modal-title">Create Record</h3>
+      <div id="modal-body"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-box">
+      <p id="confirm-msg">Are you sure you want to delete this record? This cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" id="confirm-cancel">Cancel</button>
+        <button class="btn-danger" id="confirm-ok">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>FreelanceOS</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-view="dashboard">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/dashboard-layout.png" alt="dashboard"/></i> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-view="clients">
+          <i><img width="24" height="24" src="https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-clients-media-agency-flaticons-lineal-color-flat-icons.png" alt="clients"/></i> CRM / Clients
+        </a>
+        <a href="#" class="nav-item" data-view="projects">
+          <i><img width="24" height="24" src="https://img.icons8.com/external-flaticons-flat-flat-icons/64/external-projects-home-based-business-flaticons-flat-flat-icons.png" alt="projects"/></i> Projects
+        </a>
+        <a href="#" class="nav-item" data-view="tasks">
+          <i><img width="24" height="24" src="https://img.icons8.com/liquid-glass/48/tasks.png" alt="tasks"/></i> Tasks
+        </a>
+        <a href="#" class="nav-item" data-view="invoices">
+          <i><img width="24" height="24" src="https://img.icons8.com/external-vitaliy-gorbachev-lineal-color-vitaly-gorbachev/60/external-invoices-ecommerce-vitaliy-gorbachev-lineal-color-vitaly-gorbachev.png" alt="invoices"/></i> Invoices
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile-sm">
+          <div class="avatar" id="user-avatar">U</div>
+          <div class="user-details">
+            <div class="user-name" id="user-name">User Name</div>
+            <div class="user-email" id="user-email">user@example.com</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="topbar">
+        <h3 id="current-view-title">Dashboard Overview</h3>
+        <button class="btn btn-ghost" id="btn-logout">Logout</button>
+      </header>
+
+      <div class="content-area">
+
+        <!-- Dashboard Stats -->
+        <div id="view-dashboard" class="view-section">
+          <div class="stats-grid">
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Active Projects</div>
+              <div class="stat-value" id="stat-projects">-</div>
+            </div>
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Pending Tasks</div>
+              <div class="stat-value" id="stat-tasks">-</div>
+            </div>
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Unpaid Invoices</div>
+              <div class="stat-value" id="stat-invoices">-</div>
+            </div>
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Total Expenses</div>
+              <div class="stat-value" id="stat-expenses">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- List / Table View -->
+        <div id="view-list" class="view-section hidden">
+          <div class="glass-panel" style="padding: 20px;">
+            <div class="flex-between mb-4">
+              <h4 id="list-heading">Records</h4>
+              <button class="btn btn-primary" id="btn-create-new">+ Create New</button>
+            </div>
+            <div class="table-container">
+              <table class="table" id="data-table">
+                <thead><tr id="table-head"></tr></thead>
+                <tbody id="table-body"></tbody>
+              </table>
+              <div id="empty-state" class="text-center mt-4 hidden">
+                <p>No records found. Click <strong>+ Create New</strong> to add one.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // ── Auth guard ──────────────────────────────────────────────────────────
+    if (!api.isAuthenticated()) { window.location.href = 'index.html'; return; }
+
+    // ── Sidebar user info ────────────────────────────────────────────────────
+    if (api.user) {
+      document.getElementById('user-name').textContent = `${api.user.first_name} ${api.user.last_name}`;
+      document.getElementById('user-email').textContent = api.user.email;
+      document.getElementById('user-avatar').textContent = api.user.first_name?.[0]?.toUpperCase() || 'U';
+    }
+
+    // ── Logout ───────────────────────────────────────────────────────────────
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-logout');
+      showSpinner(btn);
+      await api.logout();
+      window.location.href = 'index.html';
+    });
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let currentView = 'dashboard';
+    let editingId = null;   // null = create, string = update
+    let deleteId = null;
+    let deleteCallback = null;
+
+    // ── View config: columns, API calls, form fields ─────────────────────────
+    const VIEW_CONFIG = {
+      clients: {
+        label: 'CRM / Clients',
+        columns: ['Name', 'Email', 'Company', 'Status', 'Actions'],
+        fetchList: () => api.getClients(),
+        fetchOne:  (id) => api.getClient(id),
+        create:    (d) => api.createClient(d),
+        update:    (id, d) => api.updateClient(id, d),
+        remove:    (id) => api.deleteClient(id),
+        rowData: (r) => [r.name, r.email, r.company, renderBadge(r.status)],
+        fields: [
+          { name: 'name',    label: 'Name',    type: 'text',   required: true },
+          { name: 'email',   label: 'Email',   type: 'email',  required: true },
+          { name: 'company', label: 'Company', type: 'text' },
+          { name: 'phone',   label: 'Phone',   type: 'text' },
+          { name: 'status',  label: 'Status',  type: 'select',
+            options: ['active','inactive','lead'] },
+        ],
+      },
+      projects: {
+        label: 'Projects',
+        columns: ['Name', 'Status', 'Start Date', 'Budget', 'Actions'],
+        fetchList: () => api.getProjects(),
+        fetchOne:  (id) => api.getProject(id),
+        create:    (d) => api.createProject(d),
+        update:    (id, d) => api.updateProject(id, d),
+        remove:    (id) => api.deleteProject(id),
+        rowData: (r) => [r.name, renderBadge(r.status), r.start_date, r.budget != null ? `$${r.budget}` : '-'],
+        fields: [
+          { name: 'name',       label: 'Project Name', type: 'text',   required: true },
+          { name: 'status',     label: 'Status',       type: 'select',
+            options: ['active','on_hold','completed','cancelled'] },
+          { name: 'start_date', label: 'Start Date',   type: 'date' },
+          { name: 'budget',     label: 'Budget ($)',   type: 'number' },
+          { name: 'description',label: 'Description',  type: 'text' },
+        ],
+      },
+      tasks: {
+        label: 'Tasks',
+        columns: ['Title', 'Priority', 'Status', 'Due Date', 'Actions'],
+        fetchList: () => api.getTasks(),
+        fetchOne:  (id) => api.getTask(id),
+        create:    (d) => api.createTask(d),
+        update:    (id, d) => api.updateTask(id, d),
+        remove:    (id) => api.deleteTask(id),
+        rowData: (r) => [r.title, renderBadge(r.priority), renderBadge(r.status), r.due_date || '-'],
+        fields: [
+          { name: 'project',  label: 'Project',  type: 'select', required: true,
+            asyncOptions: async () => {
+              const res = await api.getProjects();
+              const items = Array.isArray(res) ? res : (res.results || []);
+              return items.map(p => ({ value: p.id, label: p.name }));
+            }},
+          { name: 'title',    label: 'Title',    type: 'text',   required: true },
+          { name: 'priority', label: 'Priority', type: 'select',
+            options: ['low','medium','high','urgent'] },
+          { name: 'status',   label: 'Status',   type: 'select',
+            options: ['todo','in_progress','done','cancelled'] },
+          { name: 'due_date', label: 'Due Date', type: 'date' },
+        ],
+      },
+      invoices: {
+        label: 'Invoices',
+        columns: ['Invoice #', 'Status', 'Issue Date', 'Total', 'Actions'],
+        fetchList: () => api.getInvoices(),
+        fetchOne:  (id) => api.getInvoice(id),
+        create:    (d) => api.createInvoice(d),
+        update:    (id, d) => api.updateInvoice(id, d),
+        remove:    (id) => api.deleteInvoice(id),
+        rowData: (r) => [r.invoice_number, renderBadge(r.status), r.issue_date, r.total != null ? `$${r.total}` : '-'],
+        fields: [
+          { name: 'client',         label: 'Client',      type: 'select', required: true,
+            asyncOptions: async () => {
+              const res = await api.getClients();
+              const items = Array.isArray(res) ? res : (res.results || []);
+              return items.map(c => ({ value: c.id, label: c.name }));
+            }},
+          { name: 'invoice_number', label: 'Invoice #',   type: 'text' },
+          { name: 'status',         label: 'Status',      type: 'select',
+            options: ['draft','sent','paid','overdue','cancelled'] },
+          { name: 'issue_date',     label: 'Issue Date',  type: 'date', required: true },
+          { name: 'due_date',       label: 'Due Date',    type: 'date', required: true },
+          { name: 'total',          label: 'Total ($)',   type: 'number' },
+        ],
+      },
+    };
+
+    // ── Navigation ───────────────────────────────────────────────────────────
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewDashboard = document.getElementById('view-dashboard');
+    const viewList = document.getElementById('view-list');
+    const titleEl = document.getElementById('current-view-title');
+
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        currentView = item.getAttribute('data-view');
+        titleEl.textContent = VIEW_CONFIG[currentView]?.label || 'Dashboard Overview';
+
+        if (currentView === 'dashboard') {
+          viewDashboard.classList.remove('hidden');
+          viewList.classList.add('hidden');
+          loadDashboardStats();
+        } else {
+          viewDashboard.classList.add('hidden');
+          viewList.classList.remove('hidden');
+          document.getElementById('list-heading').textContent = VIEW_CONFIG[currentView].label;
+          loadListData(currentView);
+        }
+      });
+    });
+
+    // ── Dashboard stats ──────────────────────────────────────────────────────
+    async function loadDashboardStats() {
+      try {
+        const data = await api.getDashboardSummary();
+        if (data) {
+          document.getElementById('stat-projects').textContent = data.projects ?? 0;
+          document.getElementById('stat-tasks').textContent    = data.tasks    ?? 0;
+          document.getElementById('stat-invoices').textContent = data.invoices ?? 0;
+          document.getElementById('stat-expenses').textContent = data.expenses ?? 0;
+        }
+      } catch (err) {
+        showAlert('Failed to load dashboard statistics.', 'error');
+      }
+    }
+
+    // ── List / Table ─────────────────────────────────────────────────────────
+    async function loadListData(type) {
+      const cfg = VIEW_CONFIG[type];
+      const tHead = document.getElementById('table-head');
+      const tBody = document.getElementById('table-body');
+      const emptyState = document.getElementById('empty-state');
+
+      tHead.innerHTML = '';
+      tBody.innerHTML = `<tr><td colspan="${cfg.columns.length}" class="text-center"><span class="spinner"></span> Loading…</td></tr>`;
+      emptyState.classList.add('hidden');
+
+      cfg.columns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        tHead.appendChild(th);
+      });
+
+      try {
+        const res = await cfg.fetchList();
+        const records = Array.isArray(res) ? res : (res.results || []);
+        tBody.innerHTML = '';
+
+        if (records.length === 0) {
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        records.forEach(record => {
+          const tr = document.createElement('tr');
+          cfg.rowData(record).forEach(cellHtml => {
+            const td = document.createElement('td');
+            td.innerHTML = cellHtml ?? '-';
+            tr.appendChild(td);
+          });
+
+          // Actions cell
+          const tdAct = document.createElement('td');
+          const editBtn = document.createElement('button');
+          editBtn.className = 'tbl-btn tbl-btn-edit';
+          editBtn.textContent = 'Edit';
+          editBtn.addEventListener('click', () => openEditModal(type, record.id || record.uuid));
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'tbl-btn tbl-btn-delete';
+          delBtn.textContent = 'Delete';
+          delBtn.addEventListener('click', () => confirmDelete(type, record.id || record.uuid));
+
+          tdAct.appendChild(editBtn);
+          tdAct.appendChild(delBtn);
+          tr.appendChild(tdAct);
+          tBody.appendChild(tr);
+        });
+      } catch (err) {
+        tBody.innerHTML = `<tr><td colspan="${cfg.columns.length}" class="text-center text-danger">Failed to load data: ${err.message}</td></tr>`;
+      }
+    }
+
+    // ── Modal helpers ────────────────────────────────────────────────────────
+    const overlay = document.getElementById('modal-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody  = document.getElementById('modal-body');
+    const modalSave  = document.getElementById('modal-save');
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      editingId = null;
+    }
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('modal-cancel').addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+    async function loadAsyncOptions(fields) {
+      for (const f of fields) {
+        if (f.asyncOptions && !f._loadedOptions) {
+          try {
+            f._loadedOptions = await f.asyncOptions();
+          } catch (e) {
+            f._loadedOptions = [];
+            console.warn(`Failed to load options for ${f.name}:`, e);
+          }
+        }
+      }
+    }
+
+    function buildForm(fields, data = {}) {
+      return fields.map(f => {
+        const val = data[f.name] ?? '';
+        if (f.type === 'select') {
+          let opts;
+          if (f._loadedOptions) {
+            opts = f._loadedOptions.map(o =>
+              `<option value="${o.value}" ${String(val) === String(o.value) ? 'selected' : ''}>${o.label}</option>`
+            ).join('');
+          } else if (f.options) {
+            opts = f.options.map(o =>
+              `<option value="${o}" ${val === o ? 'selected' : ''}>${o.replace('_',' ').toUpperCase()}</option>`
+            ).join('');
+          } else {
+            opts = '';
+          }
+          return `
+            <div class="form-group">
+              <label class="form-label">${f.label}${f.required ? ' *' : ''}</label>
+              <select name="${f.name}">${opts}</select>
+            </div>`;
+        }
+        return `
+          <div class="form-group">
+            <label class="form-label">${f.label}${f.required ? ' *' : ''}</label>
+            <input class="form-input" type="${f.type}" name="${f.name}" value="${val}" ${f.required ? 'required' : ''}>
+          </div>`;
+      }).join('');
+    }
+
+    function getFormData(fields) {
+      const data = {};
+      fields.forEach(f => {
+        const el = modalBody.querySelector(`[name="${f.name}"]`);
+        if (el && el.value.trim() !== '') data[f.name] = el.value.trim();
+      });
+      return data;
+    }
+
+    // ── Create modal ─────────────────────────────────────────────────────────
+    document.getElementById('btn-create-new').addEventListener('click', async () => {
+      const cfg = VIEW_CONFIG[currentView];
+      if (!cfg) return;
+      editingId = null;
+      modalTitle.textContent = `New ${cfg.label.replace(' / Clients','')}`;
+      modalBody.innerHTML = `<p style="color:#aaa; text-align:center;">Loading…</p>`;
+      overlay.classList.add('open');
+
+      await loadAsyncOptions(cfg.fields);
+      modalBody.innerHTML = buildForm(cfg.fields);
+
+      modalSave.onclick = async () => {
+        const payload = getFormData(cfg.fields);
+        showSpinner(modalSave);
+        try {
+          await cfg.create(payload);
+          closeModal();
+          showAlert(`Created successfully!`, 'success');
+          loadListData(currentView);
+        } catch (err) {
+          showAlert(err.message, 'error');
+        } finally {
+          hideSpinner(modalSave);
+        }
+      };
+    });
+
+    // ── Edit modal ───────────────────────────────────────────────────────────
+    async function openEditModal(type, id) {
+      const cfg = VIEW_CONFIG[type];
+      editingId = id;
+      modalTitle.textContent = `Edit ${cfg.label.replace(' / Clients','')}`;
+      modalBody.innerHTML = `<p style="color:#aaa; text-align:center;">Loading…</p>`;
+      overlay.classList.add('open');
+
+      try {
+        await loadAsyncOptions(cfg.fields);
+        const record = await cfg.fetchOne(id);
+        modalBody.innerHTML = buildForm(cfg.fields, record);
+      } catch (err) {
+        modalBody.innerHTML = `<p style="color:#ff6b7a;">Failed to load record.</p>`;
+      }
+
+      modalSave.onclick = async () => {
+        const payload = getFormData(cfg.fields);
+        showSpinner(modalSave);
+        try {
+          await cfg.update(id, payload);
+          closeModal();
+          showAlert('Updated successfully!', 'success');
+          loadListData(type);
+        } catch (err) {
+          showAlert(err.message, 'error');
+        } finally {
+          hideSpinner(modalSave);
+        }
+      };
+    }
+
+    // ── Confirm delete ───────────────────────────────────────────────────────
+    const confirmOverlay = document.getElementById('confirm-overlay');
+    document.getElementById('confirm-cancel').addEventListener('click', () => {
+      confirmOverlay.classList.remove('open');
+    });
+    document.getElementById('confirm-ok').addEventListener('click', async () => {
+      if (!deleteCallback) return;
+      const btn = document.getElementById('confirm-ok');
+      showSpinner(btn);
+      try {
+        await deleteCallback();
+        confirmOverlay.classList.remove('open');
+        showAlert('Deleted successfully.', 'success');
+        loadListData(currentView);
+      } catch (err) {
+        showAlert(err.message, 'error');
+      } finally {
+        hideSpinner(btn);
+        deleteCallback = null;
+      }
+    });
+
+    function confirmDelete(type, id) {
+      const cfg = VIEW_CONFIG[type];
+      deleteCallback = () => cfg.remove(id);
+      confirmOverlay.classList.add('open');
+    }
+
+    // ── Badge helper ─────────────────────────────────────────────────────────
+    function renderBadge(status) {
+      if (!status) return '-';
+      const good = ['active','paid','done','completed'];
+      const bad  = ['overdue','cancelled'];
+      const cls  = good.includes(status) ? 'badge-success'
+                 : bad.includes(status)  ? 'badge-danger'
+                 : 'badge-warning';
+      return `<span class="badge ${cls}">${status.replace(/_/g,' ').toUpperCase()}</span>`;
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadDashboardStats();
+  });
+  </script>
+</body>
+</html>

@@ -50,31 +50,6 @@ def register_user(email, password, first_name, last_name, **extra_fields):
         **extra_fields,
     )
 
-<<<<<<< HEAD
-    # Auto-provision a default workspace for the new user
-    import uuid
-    from apps.tenants.models import Tenant, Role, Membership
-    from django.utils.text import slugify
-    
-    tenant_name = f"{first_name}'s Workspace"
-    tenant_slug = slugify(tenant_name) + "-" + uuid.uuid4().hex[:6]
-    
-    tenant = Tenant.objects.create(
-        name=tenant_name,
-        slug=tenant_slug,
-        owner=user,
-        plan="free",
-        is_active=True
-    )
-    
-    role, _ = Role.objects.get_or_create(tenant=tenant, name="Owner")
-    Membership.objects.create(
-        user=user,
-        tenant=tenant,
-        role=role,
-        status="active"
-    )
-=======
     # --- Bootstrap personal workspace ---
     from apps.tenants.models import Membership, Role, Tenant
 
@@ -107,12 +82,14 @@ def register_user(email, password, first_name, last_name, **extra_fields):
         joined_at=timezone.now(),
     )
     # --- End bootstrap ---
->>>>>>> 30002b3ac4405b5ddee70c93f42772ed7587c2ca
 
-    verification_token = generate_verification_token(user)
+    # NOTE: The post_save signal on User already generates a verification
+    # token and queues the email task, so we don't call
+    # generate_verification_token() here to avoid creating a duplicate
+    # token that would invalidate the one sent via email.
 
     logger.info(f"User registered: {user.email}")
-    return user, verification_token
+    return user, None
 
 
 def login_user(email, password, request=None):

@@ -63,6 +63,10 @@ class TenantQuerysetMixin:
             updated_by=self.request.user,
         )
 
+    def perform_destroy(self, instance):
+        """Soft-delete instead of permanent deletion."""
+        instance.soft_delete(user=self.request.user)
+
 
 class AuditMixin:
     """
