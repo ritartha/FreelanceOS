@@ -7,7 +7,7 @@ from apps.invoices.models import Invoice, InvoiceLineItem
 
 
 class InvoiceViewSet(TenantQuerysetMixin, viewsets.ModelViewSet):
-    queryset = Invoice.all_objects.all()
+    queryset = Invoice.objects.all()  # uses TenantAwareManager which filters is_deleted=False
     serializer_class = InvoiceSerializer
 
 
