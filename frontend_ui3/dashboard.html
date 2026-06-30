@@ -173,7 +173,7 @@
           <i><img width="24" height="24" src="https://img.icons8.com/color/48/dashboard-layout.png" alt="dashboard"/></i> Dashboard
         </a>
         <a href="#" class="nav-item" data-view="clients">
-          <i><img width="24" height="24" src="https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-clients-media-agency-flaticons-lineal-color-flat-icons.png" alt="clients"/></i> CRM / Clients
+          <i><img width="24" height="24" src="https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-clients-media-agency-flaticons-lineal-color-flat-icons.png" alt="clients"/></i> Clients
         </a>
         <a href="#" class="nav-item" data-view="projects">
           <i><img width="24" height="24" src="https://img.icons8.com/external-flaticons-flat-flat-icons/64/external-projects-home-based-business-flaticons-flat-flat-icons.png" alt="projects"/></i> Projects
@@ -254,7 +254,7 @@
   <script>
   document.addEventListener('DOMContentLoaded', () => {
 
-    // ── Auth guard ──────────────────────────────────────────────────────────
+    // ── Auth guard ───────────────────────────────────────────────────────────
     if (!api.isAuthenticated()) { window.location.href = 'index.html'; return; }
 
     // ── Sidebar user info ────────────────────────────────────────────────────
@@ -479,13 +479,22 @@
     document.getElementById('modal-cancel').addEventListener('click', closeModal);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
 
+    // Fix: only use cached options if they were successfully loaded (non-empty).
+    // If _loadedOptions is null/undefined or an empty array (failed/never fetched),
+    // always re-fetch so dropdowns like Client are never permanently stuck empty.
     async function loadAsyncOptions(fields) {
       for (const f of fields) {
-        if (f.asyncOptions && !f._loadedOptions) {
+        if (f.asyncOptions && !(f._loadedOptions && f._loadedOptions.length > 0)) {
           try {
-            f._loadedOptions = await f.asyncOptions();
+            const result = await f.asyncOptions();
+            // Only cache if we actually got data back
+            if (result && result.length > 0) {
+              f._loadedOptions = result;
+            } else {
+              f._loadedOptions = null; // keep null so we retry next time
+            }
           } catch (e) {
-            f._loadedOptions = [];
+            f._loadedOptions = null; // don't cache failures — retry on next open
             console.warn(`Failed to load options for ${f.name}:`, e);
           }
         }
