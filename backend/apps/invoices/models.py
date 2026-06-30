@@ -14,7 +14,7 @@ class Invoice(TenantAwareModel):
 
     client = models.ForeignKey("crm.Client", on_delete=models.CASCADE, related_name="invoices")
     project = models.ForeignKey("projects.Project", on_delete=models.SET_NULL, null=True, blank=True, related_name="invoices")
-    invoice_number = models.CharField(max_length=100)
+    invoice_number = models.CharField(max_length=100, blank=True)  # auto-generated if not provided
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.DRAFT)
     issue_date = models.DateField()
     due_date = models.DateField()
@@ -32,6 +32,25 @@ class Invoice(TenantAwareModel):
 
     def __str__(self):
         return self.invoice_number
+
+    @classmethod
+    def generate_invoice_number(cls, tenant):
+        """Generate the next sequential invoice number for the given tenant, e.g. INV-0001."""
+        last = (
+            cls.all_objects
+            .filter(tenant=tenant, invoice_number__startswith="INV-")
+            .order_by("-invoice_number")
+            .values_list("invoice_number", flat=True)
+            .first()
+        )
+        if last:
+            try:
+                num = int(last.split("-")[-1]) + 1
+            except (ValueError, IndexError):
+                num = 1
+        else:
+            num = 1
+        return f"INV-{num:04d}"
 
 
 class InvoiceLineItem(models.Model):
