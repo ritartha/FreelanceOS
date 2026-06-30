@@ -62,6 +62,7 @@ LOCAL_APPS = [
     "apps.audit",
     "apps.crm",
     "apps.notes",
+    "apps.proposals",
     "apps.projects",
     "apps.tasks",
     "apps.time_tracking",
