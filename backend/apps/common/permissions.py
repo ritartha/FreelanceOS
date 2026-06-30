@@ -76,7 +76,35 @@ class IsTenantOwner(BasePermission):
         return request.tenant.owner_id == request.user.id
 
 
-class IsTenantAdmin(BasePermission):
+class HasModulePermission(BasePermission):
+    """
+    Checks granular module/action permissions via Role.permissions JSON.
+
+    Usage on a ViewSet:
+        permission_classes = [HasModulePermission]
+        permission_required = ("invoices", "edit")  # (module, action)
+
+    Falls back to read-only ("view") for GET/HEAD/OPTIONS if permission_required
+    is not set on the view.
+    """
+
+    message = "You do not have permission to perform this action."
+
+    def has_permission(self, request, view):
+        from apps.tenants.services.permission_service import (
+            get_membership_for_request,
+            has_permission,
+        )
+
+        membership = get_membership_for_request(request)
+        if membership is None:
+            return False
+
+        module, action = getattr(view, "permission_required", (None, None))
+        if module is None:
+            return True  # view didn't opt in; rely on other permission classes
+
+        return has_permission(membership, module, action)
     """
     Allows access to tenant owners and members with admin role.
     """

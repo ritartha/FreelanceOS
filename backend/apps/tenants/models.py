@@ -40,6 +40,26 @@ class Role(TimeStampedModel):
         return self.name
 
 
+class Department(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="departments")
+    name = models.CharField(max_length=100)
+    lead = models.ForeignKey(
+        "tenants.Membership",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="led_departments",
+    )
+
+    class Meta:
+        db_table = "tenants_department"
+        constraints = [models.UniqueConstraint(fields=["tenant", "name"], name="uniq_tenant_department_name")]
+
+    def __str__(self):
+        return self.name
+
+
 class Membership(TimeStampedModel):
     class StatusChoices(models.TextChoices):
         ACTIVE = "active", "Active"
@@ -50,6 +70,13 @@ class Membership(TimeStampedModel):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships")
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name="memberships")
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="memberships",
+    )
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.ACTIVE)
     joined_at = models.DateTimeField(null=True, blank=True)
 
