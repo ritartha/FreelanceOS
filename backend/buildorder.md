@@ -4,33 +4,33 @@ Sequenced so each stage unblocks the next: foundational data models first, then 
 
 ---
 
-## Stage 0 — Foundation hardening (do first, touches everything downstream)
+##✅ Stage 0 — Foundation hardening (do first, touches everything downstream)
 - 🔲 Audit `accounts` app: confirm email verification, Google OAuth, 2FA are fully implemented (not stubbed) — every later module assumes a working auth/session layer
 - 🔲 Extend `tenants` app for Agency Mode: add `Role`, `Permission`, `Department` models; wire into existing `Membership` model
 - 🔲 Confirm `common/repositories.py` and `common/pagination.py`/`filters.py` are actually used in existing ViewSets, not just defined — fix any that bypass them
 - 🔲 Add `services/` folder to every app missing one (currently only `accounts` and `audit` have it)
 - 🔲 Decide and document the Note-attachment pattern (generic FK vs. per-model FK) before building `notes`, since CRM, Projects, and Tasks will all need it
 
-## Stage 1 — CRM depth (everything else links back to Client)
+##✅  Stage 1 — CRM depth (everything else links back to Client)
 - 🔲 Expand `crm/models.py` (currently 39 lines): Lead, Contact, Company, Tag, LeadScore, CommunicationHistory
 - 🔲 Add CRM services: lead scoring logic, lead→client conversion
 - 🔲 Add search/filter endpoints (leads, clients, tags)
 
-## Stage 2 — Notes app (new, small, needed by CRM/Projects/Tasks)
+##✅  Stage 2 — Notes app (new, small, needed by CRM/Projects/Tasks)
 - 🔲 Build `notes` app: rich text/markdown Note model, generic attachment to Client/Project/Task
 - 🔲 Wire into CRM and Projects serializers
 
-## Stage 3 — Files depth
+##✅  Stage 3 — Files depth
 - 🔲 Expand `files/models.py` (currently 20 lines): folders, version history, tags, storage usage tracking per tenant
 - 🔲 Attach files to Projects/Contracts/Proposals (those come later — keep FK generic or nullable for now)
 
-## Stage 4 — Proposal Builder (new app)
+##✅  Stage 4 — Proposal Builder (new app)
 - 🔲 `proposals` app: ProposalTemplate, Proposal, Variable model, markdown content field
 - 🔲 PDF export service
 - 🔲 Email-send service (reuse notifications app)
 - 🔲 Acceptance tracking + analytics (views/opens) fields and endpoints
 
-## Stage 5 — Quotation Module (new app, depends on Proposals for "convert to quotation" later)
+##✅ Stage 5 — Quotation Module (new app, depends on Proposals for "convert to quotation" later)
 - 🔲 `quotations` app: Quotation, QuotationLineItem
 - 🔲 Tax/GST/discount calculation service
 - 🔲 PDF export, shareable public link (token-based, no login)
