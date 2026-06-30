@@ -6,5 +6,9 @@ from apps.projects.models import Project
 
 
 class ProjectViewSet(TenantQuerysetMixin, viewsets.ModelViewSet):
+<<<<<<< Updated upstream
     queryset = Project.objects.all()  # uses TenantAwareManager which filters is_deleted=False
+=======
+    queryset = Project.objects.all()
+>>>>>>> Stashed changes
     serializer_class = ProjectSerializer
