@@ -28,4 +28,6 @@ urlpatterns = [
     path("reports/", include("apps.reports.api.urls", namespace="reports")),
     path("files/", include("apps.files.api.urls", namespace="files")),
     path("notifications/", include("apps.notifications.api.urls", namespace="notifications")),
+    path("calendar/", include("apps.calendar_app.api.urls", namespace="calendar")),
+    path("portfolio/", include("apps.portfolio.api.urls", namespace="portfolio")),
 ]
