@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Portal | FreelanceOS</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .portal-stack {
+      width: 100%;
+      max-width: 560px;
+      display: grid;
+      gap: 18px;
+    }
+    .portal-section {
+      padding: 28px;
+    }
+    .portal-section h2 {
+      margin-bottom: 8px;
+      font-size: 1.15rem;
+    }
+    .portal-section p {
+      margin-bottom: 18px;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="portal-stack">
+      <div id="global-alert" class="alert"></div>
+
+      <div class="portal-section glass-panel">
+        <div class="auth-header" style="margin-bottom: 18px;">
+          <h1>Client Portal</h1>
+          <p>Request a secure sign-in link to view your projects, invoices, and quotations.</p>
+        </div>
+
+        <form id="request-form">
+          <div class="form-group">
+            <label class="form-label" for="portal-email">Email Address</label>
+            <input type="email" id="portal-email" class="form-input" placeholder="client@example.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-request-link">Request Login Link</button>
+        </form>
+      </div>
+
+      <div class="portal-section glass-panel hidden" id="token-section">
+        <h2>Enter Token</h2>
+        <p>If your link already includes a token, verify it below to continue to the client dashboard.</p>
+        <form id="token-form">
+          <div class="form-group">
+            <label class="form-label" for="portal-token">Token</label>
+            <input type="text" id="portal-token" class="form-input" placeholder="Paste your token" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-verify-token">Verify Token</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+
+    function showPortalAlert(message, type = 'error') {
+      const alertEl = document.getElementById('global-alert');
+      alertEl.textContent = message;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+      setTimeout(() => { alertEl.style.display = 'none'; }, 5000);
+    }
+
+    function showSpinner(buttonEl) {
+      const originalText = buttonEl.innerHTML;
+      buttonEl.setAttribute('data-original-text', originalText);
+      buttonEl.disabled = true;
+      buttonEl.innerHTML = '<span class="spinner"></span>';
+    }
+
+    function hideSpinner(buttonEl) {
+      const originalText = buttonEl.getAttribute('data-original-text');
+      buttonEl.innerHTML = originalText;
+      buttonEl.disabled = false;
+    }
+
+    async function postJson(path, payload) {
+      const response = await window.fetch(`${API_BASE_URL}${path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await response.text();
+      const data = text ? (() => {
+        try { return JSON.parse(text); } catch (e) { return null; }
+      })() : null;
+
+      if (!response.ok) {
+        throw new Error(data?.detail || data?.error?.message || 'Request failed');
+      }
+
+      return data;
+    }
+
+    async function validatePortalToken(token) {
+      const tryAuth = async (scheme) => {
+        const response = await window.fetch(`${API_BASE_URL}/portal/me/`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `${scheme} ${token}`,
+          },
+        });
+        if (!response.ok) return null;
+        return { scheme, profile: await response.json() };
+      };
+
+      return (await tryAuth('Portal')) || (await tryAuth('Bearer'));
+    }
+
+    function persistPortalSession(authData, tokenOverride, profile, schemeOverride) {
+      const token = authData?.access_token || authData?.access || authData?.token || tokenOverride;
+      if (!token) throw new Error('No portal token was returned.');
+      sessionStorage.setItem('portal_token', token);
+      sessionStorage.setItem('portal_client_name', authData?.client_name || profile?.name || 'Client');
+      if (authData?.refresh_token || authData?.refresh) {
+        sessionStorage.setItem('portal_refresh_token', authData.refresh_token || authData.refresh);
+      }
+      if (authData?.client_id) {
+        sessionStorage.setItem('portal_client_id', authData.client_id);
+      }
+      sessionStorage.setItem('portal_auth_scheme', schemeOverride || 'Portal');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const tokenSection = document.getElementById('token-section');
+      const tokenInput = document.getElementById('portal-token');
+
+      if (token) {
+        tokenSection.classList.remove('hidden');
+        tokenInput.value = token;
+      }
+
+      document.getElementById('request-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-request-link');
+        showSpinner(btn);
+        try {
+          const email = document.getElementById('portal-email').value.trim();
+          try {
+            await postJson('/portal/auth/login/', { email });
+          } catch (err) {
+            // Keep the UX generic even when the backend requires a different auth flow.
+          }
+          showPortalAlert('If an account exists for that email, a login link has been sent.', 'success');
+        } catch (err) {
+          showPortalAlert(err.message, 'error');
+        } finally {
+          hideSpinner(btn);
+        }
+      });
+
+      document.getElementById('token-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-verify-token');
+        const rawToken = tokenInput.value.trim();
+        showSpinner(btn);
+        try {
+          let authData = null;
+          try {
+            authData = await postJson('/portal/auth/verify/', { token: rawToken });
+          } catch (err) {
+            authData = null;
+          }
+
+          if (authData) {
+            const validated = await validatePortalToken(authData.access_token || authData.access || rawToken);
+            persistPortalSession(authData, rawToken, validated?.profile, validated?.scheme);
+            window.location.href = 'portal-dashboard.html';
+            return;
+          }
+
+          const validated = await validatePortalToken(rawToken);
+          if (!validated) {
+            throw new Error('Unable to verify this token with the current backend.');
+          }
+
+          persistPortalSession(null, rawToken, validated.profile, validated.scheme);
+          window.location.href = 'portal-dashboard.html';
+        } catch (err) {
+          showPortalAlert(err.message, 'error');
+        } finally {
+          hideSpinner(btn);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
