@@ -40,6 +40,7 @@ urlpatterns = [
     path("reports/", include("apps.reports.urls", namespace="reports")),
     path("files/", include("apps.files.urls", namespace="files")),
     path("notifications/", include("apps.notifications.urls", namespace="notifications")),
+    path("portal/", include("apps.client_portal.urls", namespace="client-portal")),
 
     # Root redirect to dashboard
     path("", lambda request: __import__("django.shortcuts", fromlist=["redirect"]).redirect("/dashboard/")),

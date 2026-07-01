@@ -30,4 +30,5 @@ urlpatterns = [
     path("notifications/", include("apps.notifications.api.urls", namespace="notifications")),
     path("calendar/", include("apps.calendar_app.api.urls", namespace="calendar")),
     path("portfolio/", include("apps.portfolio.api.urls", namespace="portfolio")),
+    path("portal/", include("apps.client_portal.api.urls", namespace="client-portal")),
 ]
