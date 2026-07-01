@@ -295,14 +295,17 @@ function showAlert(message, type = 'error') {
 }
 
 function showSpinner(buttonEl) {
-  const originalText = buttonEl.innerHTML;
+  const originalText = buttonEl.textContent;
   buttonEl.setAttribute('data-original-text', originalText);
   buttonEl.disabled = true;
-  buttonEl.innerHTML = '<span class="spinner"></span>';
+  buttonEl.replaceChildren();
+  const spinner = document.createElement('span');
+  spinner.className = 'spinner';
+  buttonEl.appendChild(spinner);
 }
 
 function hideSpinner(buttonEl) {
   const originalText = buttonEl.getAttribute('data-original-text');
-  buttonEl.innerHTML = originalText;
+  buttonEl.replaceChildren(document.createTextNode(originalText || ''));
   buttonEl.disabled = false;
 }
