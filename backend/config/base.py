@@ -73,6 +73,7 @@ LOCAL_APPS = [
     "apps.notifications",
     "apps.calendar_app",
     "apps.portfolio",
+    "apps.client_portal",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -276,6 +277,26 @@ CELERY_TASK_ROUTES = {
 }
 
 CELERY_TASK_DEFAULT_QUEUE = "default"
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    # Mark overdue invoices and send payment reminders — 7 AM UTC daily
+    "overdue-invoices-daily": {
+        "task": "apps.invoices.tasks.check_overdue_invoices",
+        "schedule": crontab(hour=7, minute=0),
+    },
+    # Auto-generate invoices from RecurringInvoice templates — 6 AM UTC daily
+    "recurring-invoices-daily": {
+        "task": "apps.invoices.tasks.generate_recurring_invoices",
+        "schedule": crontab(hour=6, minute=0),
+    },
+    # Send contract expiry/renewal reminder emails — 8 AM UTC daily
+    "contract-reminders-daily": {
+        "task": "apps.contracts.tasks.check_contract_reminders",
+        "schedule": crontab(hour=8, minute=0),
+    },
+}
 
 # =============================================================================
 # Email
