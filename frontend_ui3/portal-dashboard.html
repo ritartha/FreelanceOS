@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Dashboard | FreelanceOS</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .portal-shell {
+      min-height: 100vh;
+      padding: 32px;
+    }
+    .portal-frame {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+    .portal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 24px 28px;
+    }
+    .portal-header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+    .portal-header p {
+      color: var(--text-secondary);
+    }
+    .portal-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .portal-tabs .btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    .portal-panel {
+      padding: 24px 28px;
+    }
+    .portal-empty {
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 28px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-shell">
+    <div class="portal-frame">
+      <div id="portal-alert" class="alert"></div>
+
+      <div class="glass-panel portal-header">
+        <div>
+          <h1 id="portal-client-name">Client Portal</h1>
+          <p>Review current work, outstanding invoices, and quotations shared with you.</p>
+        </div>
+        <button class="btn btn-ghost" id="btn-portal-logout">Logout</button>
+      </div>
+
+      <div class="glass-panel portal-panel">
+        <div class="portal-tabs">
+          <button class="btn btn-ghost active" data-tab="projects">My Projects</button>
+          <button class="btn btn-ghost" data-tab="invoices">My Invoices</button>
+          <button class="btn btn-ghost" data-tab="quotations">My Quotations</button>
+        </div>
+
+        <div id="portal-projects" class="portal-view">
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Start Date</th>
+                  <th>Budget</th>
+                </tr>
+              </thead>
+              <tbody id="projects-body">
+                <tr><td colspan="4" class="portal-empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="portal-invoices" class="portal-view hidden">
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="invoices-body">
+                <tr><td colspan="5" class="portal-empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="portal-quotations" class="portal-view hidden">
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Quotation #</th>
+                  <th>Status</th>
+                  <th>Valid Until</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="quotations-body">
+                <tr><td colspan="5" class="portal-empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+
+    function getPortalToken() {
+      return sessionStorage.getItem('portal_token');
+    }
+
+    function showPortalAlert(message, type = 'error') {
+      const alertEl = document.getElementById('portal-alert');
+      alertEl.textContent = message;
+      alertEl.className = `alert ${type}`;
+      alertEl.style.display = 'block';
+      setTimeout(() => { alertEl.style.display = 'none'; }, 5000);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[char]);
+    }
+
+    function formatCurrency(value) {
+      if (value === null || value === undefined || value === '') return '-';
+      const number = Number(value);
+      if (Number.isNaN(number)) return `$${value}`;
+      return `$${number.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    }
+
+    function renderBadge(status) {
+      if (!status) return '-';
+      const good = ['active','paid','done','completed','accepted','signed','converted'];
+      const bad = ['cancelled','declined','expired','overdue'];
+      const cls = good.includes(status) ? 'badge-success' : bad.includes(status) ? 'badge-danger' : 'badge-warning';
+      return `<span class="badge ${cls}">${escapeHtml(String(status).replace(/_/g, ' ').toUpperCase())}</span>`;
+    }
+
+    async function portalFetch(path, options = {}, retryWithBearer = true) {
+      const token = getPortalToken();
+      const scheme = sessionStorage.getItem('portal_auth_scheme') || 'Portal';
+      const response = await window.fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers: {
+          'Accept': options.accept || 'application/json',
+          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+          ...options.headers,
+          'Authorization': `${scheme} ${token}`,
+        },
+      });
+
+      if ((response.status === 401 || response.status === 403) && retryWithBearer && scheme !== 'Bearer') {
+        sessionStorage.setItem('portal_auth_scheme', 'Bearer');
+        return portalFetch(path, options, false);
+      }
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = `Request failed (${response.status})`;
+        if (text) {
+          try {
+            const data = JSON.parse(text);
+            message = data?.detail || data?.error?.message || message;
+          } catch (e) {
+            message = text;
+          }
+        }
+        throw new Error(message);
+      }
+
+      if (options.expectBlob) {
+        return {
+          blob: await response.blob(),
+          filename: response.headers.get('Content-Disposition')?.match(/filename="?([^"]+)"?/)?.[1] || null,
+        };
+      }
+
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function loadProjects() {
+      const tbody = document.getElementById('projects-body');
+      tbody.innerHTML = '<tr><td colspan="4" class="portal-empty">Loading…</td></tr>';
+      try {
+        const data = await portalFetch('/portal/projects/');
+        const items = Array.isArray(data) ? data : (data?.results || []);
+        tbody.innerHTML = items.length
+          ? items.map(item => `
+              <tr>
+                <td>${escapeHtml(item.name || '-')}</td>
+                <td>${renderBadge(item.status)}</td>
+                <td>${escapeHtml(item.start_date || '-')}</td>
+                <td>${escapeHtml(formatCurrency(item.budget))}</td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="4" class="portal-empty">No projects available.</td></tr>';
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" class="portal-empty text-danger">${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    async function downloadInvoicePdf(id) {
+      const attempts = [`/portal/invoices/${id}/pdf/`, `/invoices/${id}/pdf/`];
+      for (const path of attempts) {
+        try {
+          return await portalFetch(path, { expectBlob: true, accept: 'application/pdf' });
+        } catch (err) {
+          if (path === attempts[attempts.length - 1]) throw err;
+        }
+      }
+    }
+
+    async function loadInvoices() {
+      const tbody = document.getElementById('invoices-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="portal-empty">Loading…</td></tr>';
+      try {
+        const data = await portalFetch('/portal/invoices/');
+        const items = Array.isArray(data) ? data : (data?.results || []);
+        tbody.innerHTML = items.length
+          ? items.map(item => `
+              <tr>
+                <td>${escapeHtml(item.invoice_number || '-')}</td>
+                <td>${renderBadge(item.status)}</td>
+                <td>${escapeHtml(item.due_date || '-')}</td>
+                <td>${escapeHtml(formatCurrency(item.total))}</td>
+                <td><button class="btn btn-ghost" data-download-invoice="${escapeHtml(item.id)}">Download PDF</button></td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="5" class="portal-empty">No invoices available.</td></tr>';
+
+        tbody.querySelectorAll('[data-download-invoice]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              const { blob, filename } = await downloadInvoicePdf(btn.getAttribute('data-download-invoice'));
+              const url = window.URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = filename || 'invoice.pdf';
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              window.URL.revokeObjectURL(url);
+            } catch (err) {
+              showPortalAlert(err.message, 'error');
+            }
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="portal-empty text-danger">${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    async function approveQuotation(id) {
+      const attempts = [
+        `/portal/quotations/${id}/approve/`,
+        `/portal/quotations/${id}/accept/`,
+      ];
+      for (const path of attempts) {
+        try {
+          return await portalFetch(path, { method: 'POST', body: JSON.stringify({}) });
+        } catch (err) {
+          if (path === attempts[attempts.length - 1]) throw err;
+        }
+      }
+    }
+
+    async function loadQuotations() {
+      const tbody = document.getElementById('quotations-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="portal-empty">Loading…</td></tr>';
+      try {
+        const data = await portalFetch('/portal/quotations/');
+        const items = Array.isArray(data) ? data : (data?.results || []);
+        tbody.innerHTML = items.length
+          ? items.map(item => `
+              <tr>
+                <td>${escapeHtml(item.quotation_number || item.title || '-')}</td>
+                <td>${renderBadge(item.status)}</td>
+                <td>${escapeHtml(item.valid_until || '-')}</td>
+                <td>${escapeHtml(formatCurrency(item.total))}</td>
+                <td><button class="btn btn-primary" data-approve-quotation="${escapeHtml(item.id)}">Approve</button></td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="5" class="portal-empty">No quotations available.</td></tr>';
+
+        tbody.querySelectorAll('[data-approve-quotation]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              await approveQuotation(btn.getAttribute('data-approve-quotation'));
+              showPortalAlert('Quotation updated successfully.', 'success');
+              loadQuotations();
+            } catch (err) {
+              showPortalAlert(err.message, 'error');
+            }
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="portal-empty text-danger">${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    async function loadPortalProfile() {
+      const storedName = sessionStorage.getItem('portal_client_name');
+      if (storedName) {
+        document.getElementById('portal-client-name').textContent = storedName;
+      }
+
+      try {
+        const profile = await portalFetch('/portal/me/');
+        if (profile?.name) {
+          sessionStorage.setItem('portal_client_name', profile.name);
+          document.getElementById('portal-client-name').textContent = profile.name;
+        }
+      } catch (err) {
+        showPortalAlert(err.message, 'error');
+      }
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+      });
+      document.querySelectorAll('.portal-view').forEach(view => view.classList.add('hidden'));
+      document.getElementById(`portal-${tab}`).classList.remove('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!getPortalToken()) {
+        window.location.href = 'portal.html';
+        return;
+      }
+
+      document.getElementById('btn-portal-logout').addEventListener('click', () => {
+        sessionStorage.removeItem('portal_token');
+        sessionStorage.removeItem('portal_refresh_token');
+        sessionStorage.removeItem('portal_client_name');
+        sessionStorage.removeItem('portal_client_id');
+        sessionStorage.removeItem('portal_auth_scheme');
+        window.location.href = 'portal.html';
+      });
+
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
+      });
+
+      switchTab('projects');
+      loadPortalProfile();
+      loadProjects();
+      loadInvoices();
+      loadQuotations();
+    });
+  </script>
+</body>
+</html>

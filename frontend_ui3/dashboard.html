@@ -132,6 +132,87 @@
     }
     .confirm-box p { color: #ccc; margin: 0 0 20px; line-height: 1.5; }
     .confirm-box .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+    /* ── New dashboard sections ── */
+    .stat-subtext {
+      color: #9a9aa3;
+      font-size: 0.8rem;
+      min-height: 1.1rem;
+    }
+    .dashboard-sections {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .dashboard-panel,
+    .special-panel {
+      padding: 20px;
+    }
+    .section-subtext {
+      color: #9a9aa3;
+      font-size: 0.86rem;
+      margin-bottom: 16px;
+    }
+    .recent-client-list {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+    .recent-client-item {
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+    }
+    .recent-client-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+    .muted-copy {
+      color: #9a9aa3;
+      font-size: 0.84rem;
+    }
+    .special-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+    .range-fields {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .range-fields .form-group {
+      min-width: 170px;
+      margin-bottom: 0;
+    }
+    .tab-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .tab-row .btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    .reports-results > * + * {
+      margin-top: 18px;
+    }
+    .calendar-events-empty,
+    .reports-empty {
+      color: #9a9aa3;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-sections { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -184,6 +265,30 @@
         <a href="#" class="nav-item" data-view="invoices">
           <i><img width="24" height="24" src="https://img.icons8.com/external-vitaliy-gorbachev-lineal-color-vitaly-gorbachev/60/external-invoices-ecommerce-vitaliy-gorbachev-lineal-color-vitaly-gorbachev.png" alt="invoices"/></i> Invoices
         </a>
+        <a href="#" class="nav-item" data-view="quotations">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/quote.png" alt="quotations"/></i> Quotations
+        </a>
+        <a href="#" class="nav-item" data-view="contracts">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/contract.png" alt="contracts"/></i> Contracts
+        </a>
+        <a href="#" class="nav-item" data-view="proposals">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/document--v1.png" alt="proposals"/></i> Proposals
+        </a>
+        <a href="#" class="nav-item" data-view="time-logs">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/time-machine.png" alt="time logs"/></i> Time Logs
+        </a>
+        <a href="#" class="nav-item" data-view="expenses">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/money-bag.png" alt="expenses"/></i> Expenses
+        </a>
+        <a href="#" class="nav-item" data-view="reports">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/combo-chart--v1.png" alt="reports"/></i> Reports
+        </a>
+        <a href="#" class="nav-item" data-view="calendar">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/calendar--v1.png" alt="calendar"/></i> Calendar
+        </a>
+        <a href="#" class="nav-item" data-view="portfolio">
+          <i><img width="24" height="24" src="https://img.icons8.com/color/48/briefcase.png" alt="portfolio"/></i> Portfolio
+        </a>
       </nav>
       <div class="sidebar-footer">
         <div class="user-profile-sm">
@@ -211,18 +316,68 @@
             <div class="stat-card glass-panel glass-panel-hover">
               <div class="stat-label">Active Projects</div>
               <div class="stat-value" id="stat-projects">-</div>
+              <div class="stat-subtext">Current active work</div>
             </div>
             <div class="stat-card glass-panel glass-panel-hover">
               <div class="stat-label">Pending Tasks</div>
               <div class="stat-value" id="stat-tasks">-</div>
+              <div class="stat-subtext">Open action items</div>
             </div>
             <div class="stat-card glass-panel glass-panel-hover">
               <div class="stat-label">Unpaid Invoices</div>
               <div class="stat-value" id="stat-invoices">-</div>
+              <div class="stat-subtext">Awaiting payment</div>
             </div>
             <div class="stat-card glass-panel glass-panel-hover">
               <div class="stat-label">Total Expenses</div>
               <div class="stat-value" id="stat-expenses">-</div>
+              <div class="stat-subtext">Tracked expenses</div>
+            </div>
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Revenue This Month</div>
+              <div class="stat-value" id="stat-revenue">-</div>
+              <div class="stat-subtext" id="stat-revenue-delta">-</div>
+            </div>
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Outstanding Amount</div>
+              <div class="stat-value" id="stat-outstanding">-</div>
+              <div class="stat-subtext">Open receivables</div>
+            </div>
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Overdue Invoices</div>
+              <div class="stat-value" id="stat-overdue">-</div>
+              <div class="stat-subtext">Need follow-up</div>
+            </div>
+            <div class="stat-card glass-panel glass-panel-hover">
+              <div class="stat-label">Contracts Expiring Soon</div>
+              <div class="stat-value" id="stat-contracts-expiring">-</div>
+              <div class="stat-subtext">Within 30 days</div>
+            </div>
+          </div>
+
+          <div class="dashboard-sections">
+            <div class="glass-panel dashboard-panel">
+              <h4 class="mb-4">Upcoming Deadlines</h4>
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Title</th>
+                      <th>Due Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="deadlines-body">
+                    <tr><td colspan="3" class="text-center muted-copy">Loading…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="glass-panel dashboard-panel">
+              <h4 class="mb-4">Recent Clients</h4>
+              <ul id="recent-clients-list" class="recent-client-list">
+                <li class="muted-copy">Loading…</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -242,6 +397,63 @@
               <div id="empty-state" class="text-center mt-4 hidden">
                 <p>No records found. Click <strong>+ Create New</strong> to add one.</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports View -->
+        <div id="view-reports" class="view-section hidden">
+          <div class="glass-panel special-panel">
+            <div class="special-toolbar">
+              <div class="range-fields">
+                <div class="form-group">
+                  <label class="form-label" for="report-start-date">Start Date</label>
+                  <input class="form-input" type="date" id="report-start-date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="report-end-date">End Date</label>
+                  <input class="form-input" type="date" id="report-end-date">
+                </div>
+              </div>
+              <div class="tab-row">
+                <button class="btn btn-ghost active" data-report-tab="revenue">Revenue</button>
+                <button class="btn btn-ghost" data-report-tab="expenses">Expenses</button>
+                <button class="btn btn-ghost" data-report-tab="profit">Profit</button>
+                <button class="btn btn-ghost" data-report-tab="top-clients">Top Clients</button>
+              </div>
+              <button class="btn btn-primary" id="btn-download-report">Download CSV</button>
+            </div>
+            <div class="section-subtext">Choose a date range, then switch tabs to load report data from the backend.</div>
+            <div id="reports-results" class="reports-results">
+              <div class="reports-empty">Select a report tab to load data.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div id="view-calendar" class="view-section hidden">
+          <div class="glass-panel special-panel">
+            <div class="special-toolbar">
+              <div class="tab-row">
+                <button class="btn btn-ghost active" data-calendar-mode="list">List</button>
+                <button class="btn btn-ghost" data-calendar-mode="week">Week</button>
+              </div>
+              <button class="btn btn-primary" id="btn-add-event">+ Add Event</button>
+            </div>
+            <div class="section-subtext" id="calendar-mode-copy">Showing upcoming events in list view.</div>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Event Type</th>
+                    <th>Start Date</th>
+                  </tr>
+                </thead>
+                <tbody id="calendar-events-body">
+                  <tr><td colspan="3" class="text-center muted-copy">Loading…</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -274,11 +486,19 @@
 
     // ── State ────────────────────────────────────────────────────────────────
     let currentView = 'dashboard';
-    let editingId = null;   // null = create, string = update
-    let deleteId = null;
+    let editingId = null;
     let deleteCallback = null;
+    let currentReportTab = 'revenue';
+    let currentCalendarMode = 'list';
+    const cachedRecords = {};
 
-    // ── View config: columns, API calls, form fields ─────────────────────────
+    const VIEW_TITLES = {
+      dashboard: 'Dashboard Overview',
+      reports: 'Reports',
+      calendar: 'Calendar',
+    };
+
+    // ── View config: columns, API calls, form fields ────────────────────────
     const VIEW_CONFIG = {
       clients: {
         label: 'CRM / Clients',
@@ -294,8 +514,7 @@
           { name: 'email',   label: 'Email',   type: 'email',  required: true },
           { name: 'company', label: 'Company', type: 'text' },
           { name: 'phone',   label: 'Phone',   type: 'text' },
-          { name: 'status',  label: 'Status',  type: 'select',
-            options: ['active','inactive','lead'] },
+          { name: 'status',  label: 'Status',  type: 'select', options: ['active','inactive','lead'] },
         ],
       },
       projects: {
@@ -306,14 +525,13 @@
         create:    (d) => api.createProject(d),
         update:    (id, d) => api.updateProject(id, d),
         remove:    (id) => api.deleteProject(id),
-        rowData: (r) => [r.name, renderBadge(r.status), r.start_date, r.budget != null ? `$${r.budget}` : '-'],
+        rowData: (r) => [r.name, renderBadge(r.status), r.start_date || '-', r.budget != null ? formatCurrency(r.budget) : '-'],
         fields: [
-          { name: 'name',       label: 'Project Name', type: 'text',   required: true },
-          { name: 'status',     label: 'Status',       type: 'select',
-            options: ['active','on_hold','completed','cancelled'] },
-          { name: 'start_date', label: 'Start Date',   type: 'date' },
-          { name: 'budget',     label: 'Budget ($)',   type: 'number' },
-          { name: 'description',label: 'Description',  type: 'text' },
+          { name: 'name',        label: 'Project Name', type: 'text', required: true },
+          { name: 'status',      label: 'Status',       type: 'select', options: ['active','on_hold','completed','cancelled'] },
+          { name: 'start_date',  label: 'Start Date',   type: 'date' },
+          { name: 'budget',      label: 'Budget ($)',   type: 'number' },
+          { name: 'description', label: 'Description',  type: 'text' },
         ],
       },
       tasks: {
@@ -326,17 +544,15 @@
         remove:    (id) => api.deleteTask(id),
         rowData: (r) => [r.title, renderBadge(r.priority), renderBadge(r.status), r.due_date || '-'],
         fields: [
-          { name: 'project',  label: 'Project',  type: 'select', required: true,
+          { name: 'project', label: 'Project', type: 'select', required: true,
             asyncOptions: async () => {
               const res = await api.getProjects();
               const items = Array.isArray(res) ? res : (res.results || []);
               return items.map(p => ({ value: p.id, label: p.name }));
             }},
           { name: 'title',    label: 'Title',    type: 'text',   required: true },
-          { name: 'priority', label: 'Priority', type: 'select',
-            options: ['low','medium','high','urgent'] },
-          { name: 'status',   label: 'Status',   type: 'select',
-            options: ['todo','in_progress','done','cancelled'] },
+          { name: 'priority', label: 'Priority', type: 'select', options: ['low','medium','high','urgent'] },
+          { name: 'status',   label: 'Status',   type: 'select', options: ['todo','in_progress','done','cancelled'] },
           { name: 'due_date', label: 'Due Date', type: 'date' },
         ],
       },
@@ -348,29 +564,188 @@
         create:    (d) => api.createInvoice(d),
         update:    (id, d) => api.updateInvoice(id, d),
         remove:    (id) => api.deleteInvoice(id),
-        rowData: (r) => [r.invoice_number, renderBadge(r.status), r.issue_date, r.total != null ? `$${r.total}` : '-'],
+        rowData: (r) => [r.invoice_number, renderBadge(r.status), r.issue_date || '-', r.total != null ? formatCurrency(r.total) : '-'],
         fields: [
-          { name: 'client',         label: 'Client',      type: 'select', required: true,
+          { name: 'client', label: 'Client', type: 'select', required: true,
             asyncOptions: async () => {
               const res = await api.getClients();
               const items = Array.isArray(res) ? res : (res.results || []);
               return items.map(c => ({ value: c.id, label: c.name }));
             }},
-          { name: 'invoice_number', label: 'Invoice #',   type: 'text' },
-          { name: 'status',         label: 'Status',      type: 'select',
-            options: ['draft','sent','paid','overdue','cancelled'] },
-          { name: 'issue_date',     label: 'Issue Date',  type: 'date', required: true },
-          { name: 'due_date',       label: 'Due Date',    type: 'date', required: true },
-          { name: 'total',          label: 'Total ($)',   type: 'number' },
+          { name: 'invoice_number', label: 'Invoice #',  type: 'text' },
+          { name: 'status',         label: 'Status',     type: 'select', options: ['draft','sent','paid','overdue','cancelled'] },
+          { name: 'issue_date',     label: 'Issue Date', type: 'date', required: true },
+          { name: 'due_date',       label: 'Due Date',   type: 'date', required: true },
+          { name: 'total',          label: 'Total ($)',  type: 'number' },
+        ],
+      },
+      quotations: {
+        label: 'Quotations',
+        columns: ['Title', 'Client', 'Status', 'Total', 'Valid Until', 'Actions'],
+        fetchList: () => api.getQuotations(),
+        fetchOne: (id) => api.getQuotation(id),
+        create: (d) => api.createQuotation(d),
+        update: (id, d) => api.updateQuotation(id, d),
+        remove: (id) => api.deleteQuotation(id),
+        rowData: (r) => [r.title, r.client_name || r.client, renderBadge(r.status), r.total != null ? formatCurrency(r.total) : '-', r.valid_until || '-'],
+        fields: [
+          { name: 'title',       label: 'Title',       type: 'text',   required: true },
+          { name: 'client',      label: 'Client',      type: 'select', required: true,
+            asyncOptions: async () => {
+              const res = await api.getClients();
+              const items = Array.isArray(res) ? res : (res.results || []);
+              return items.map(c => ({ value: c.id, label: c.name }));
+            }},
+          { name: 'status',      label: 'Status',      type: 'select', options: ['draft','sent','viewed','accepted','declined','expired','converted'] },
+          { name: 'valid_until', label: 'Valid Until', type: 'date' },
+          { name: 'currency',    label: 'Currency',    type: 'text' },
+          { name: 'notes',       label: 'Notes',       type: 'text' },
+        ],
+      },
+      contracts: {
+        label: 'Contracts',
+        columns: ['Title', 'Client', 'Status', 'Start Date', 'End Date', 'Actions'],
+        fetchList: () => api.getContracts(),
+        fetchOne: (id) => api.getContract(id),
+        create: (d) => api.createContract(d),
+        update: (id, d) => api.updateContract(id, d),
+        remove: (id) => api.deleteContract(id),
+        rowData: (r) => [r.title, r.client_name || r.client, renderBadge(r.status), r.start_date || '-', r.end_date || '-'],
+        fields: [
+          { name: 'title',      label: 'Title',      type: 'text',   required: true },
+          { name: 'client',     label: 'Client',     type: 'select', required: true,
+            asyncOptions: async () => {
+              const res = await api.getClients();
+              const items = Array.isArray(res) ? res : (res.results || []);
+              return items.map(c => ({ value: c.id, label: c.name }));
+            }},
+          { name: 'status',     label: 'Status',     type: 'select', options: ['draft','sent','signed','active','expired','cancelled'] },
+          { name: 'start_date', label: 'Start Date', type: 'date' },
+          { name: 'end_date',   label: 'End Date',   type: 'date' },
+          { name: 'notes',      label: 'Notes',      type: 'text' },
+        ],
+      },
+      proposals: {
+        label: 'Proposals',
+        columns: ['Title', 'Client', 'Status', 'Sent At', 'Actions'],
+        fetchList: () => api.getProposals(),
+        fetchOne: (id) => api.getProposal(id),
+        create: (d) => api.createProposal(d),
+        update: (id, d) => api.updateProposal(id, d),
+        remove: (id) => api.deleteProposal(id),
+        rowData: (r) => [r.title, r.client_name || r.client, renderBadge(r.status), r.sent_at || '-'],
+        fields: [
+          { name: 'title',  label: 'Title',  type: 'text',   required: true },
+          { name: 'client', label: 'Client', type: 'select', required: true,
+            asyncOptions: async () => {
+              const res = await api.getClients();
+              const items = Array.isArray(res) ? res : (res.results || []);
+              return items.map(c => ({ value: c.id, label: c.name }));
+            }},
+          { name: 'status', label: 'Status', type: 'select', options: ['draft','sent','viewed','accepted','declined','expired'] },
+          { name: 'notes',  label: 'Notes',  type: 'text' },
+        ],
+      },
+      'time-logs': {
+        label: 'Time Logs',
+        columns: ['Project', 'Description', 'Start Time', 'Duration (hrs)', 'Billable', 'Actions'],
+        fetchList: () => api.getTimeLogs(),
+        fetchOne: null,
+        create: (d) => api.createTimeLog(d),
+        update: (id, d) => api.updateTimeLog(id, d),
+        remove: (id) => api.deleteTimeLog(id),
+        rowData: (r) => [r.project_name || r.project, r.description || '-', r.start_time || '-', r.duration_seconds ? (r.duration_seconds / 3600).toFixed(2) : '-', r.is_billable ? '✓' : ''],
+        fields: [
+          { name: 'project', label: 'Project', type: 'select', required: true,
+            asyncOptions: async () => {
+              const res = await api.getProjects();
+              const items = Array.isArray(res) ? res : (res.results || []);
+              return items.map(p => ({ value: p.id, label: p.name }));
+            }},
+          { name: 'description', label: 'Description', type: 'text' },
+          { name: 'start_time',  label: 'Start Time',  type: 'datetime-local', required: true },
+          { name: 'end_time',    label: 'End Time',    type: 'datetime-local' },
+          { name: 'is_billable', label: 'Billable',    type: 'select', options: ['true','false'] },
+          { name: 'hourly_rate', label: 'Hourly Rate', type: 'number' },
+        ],
+      },
+      expenses: {
+        label: 'Expenses',
+        columns: ['Category', 'Description', 'Amount', 'Date', 'Billable', 'Actions'],
+        fetchList: () => api.getExpenses(),
+        fetchOne: (id) => api.getExpense(id),
+        create: (d) => api.createExpense(d),
+        update: (id, d) => api.updateExpense(id, d),
+        remove: (id) => api.deleteExpense(id),
+        rowData: (r) => [renderBadge(r.category), r.description || '-', r.amount != null ? formatCurrency(r.amount) : '-', r.expense_date || '-', r.is_billable ? '✓' : ''],
+        fields: [
+          { name: 'category',     label: 'Category',    type: 'select', options: ['travel','software','office','other'] },
+          { name: 'description',  label: 'Description', type: 'text' },
+          { name: 'amount',       label: 'Amount',      type: 'number', required: true },
+          { name: 'currency',     label: 'Currency',    type: 'text' },
+          { name: 'expense_date', label: 'Date',        type: 'date', required: true },
+          { name: 'is_billable',  label: 'Billable',    type: 'select', options: ['true','false'] },
+        ],
+      },
+      portfolio: {
+        label: 'Portfolio',
+        columns: ['Title', 'Slug', 'Published', 'Actions'],
+        fetchList: () => api.getPortfolioItems(),
+        fetchOne: (id) => api.getPortfolioItem(id),
+        create: (d) => api.createPortfolioItem(d),
+        update: (id, d) => api.updatePortfolioItem(id, d),
+        remove: (id) => api.deletePortfolioItem(id),
+        rowData: (r) => [r.title, r.slug, r.is_published ? '✓ Published' : 'Draft'],
+        fields: [
+          { name: 'title',        label: 'Title',       type: 'text', required: true },
+          { name: 'slug',         label: 'Slug',        type: 'text', required: true },
+          { name: 'summary',      label: 'Summary',     type: 'text' },
+          { name: 'client_name',  label: 'Client Name', type: 'text' },
+          { name: 'is_published', label: 'Published',   type: 'select', options: ['true','false'] },
         ],
       },
     };
+
+    const REPORT_TABS = {
+      revenue: { label: 'Revenue', fetch: (params) => api.getRevenueReport(params), csvType: 'revenue' },
+      expenses: { label: 'Expenses', fetch: (params) => api.getExpenseReport(params), csvType: 'expenses' },
+      profit: { label: 'Profit', fetch: (params) => api.getProfitReport(params), csvType: 'trends' },
+      'top-clients': { label: 'Top Clients', fetch: (params) => api.getTopClients(params), csvType: null },
+    };
+
+    const CALENDAR_FIELDS = [
+      { name: 'title',       label: 'Title',       type: 'text', required: true },
+      { name: 'event_type',  label: 'Event Type',  type: 'select', options: ['task_deadline','project_deadline','invoice_due','contract_expiry','manual'] },
+      { name: 'start',       label: 'Start',       type: 'datetime-local', required: true },
+      { name: 'end',         label: 'End',         type: 'datetime-local' },
+      { name: 'all_day',     label: 'All Day',     type: 'select', options: ['true','false'] },
+      { name: 'description', label: 'Description', type: 'text' },
+    ];
 
     // ── Navigation ───────────────────────────────────────────────────────────
     const navItems = document.querySelectorAll('.nav-item');
     const viewDashboard = document.getElementById('view-dashboard');
     const viewList = document.getElementById('view-list');
+    const viewReports = document.getElementById('view-reports');
+    const viewCalendar = document.getElementById('view-calendar');
     const titleEl = document.getElementById('current-view-title');
+
+    function setViewVisibility(view) {
+      viewDashboard.classList.add('hidden');
+      viewList.classList.add('hidden');
+      viewReports.classList.add('hidden');
+      viewCalendar.classList.add('hidden');
+
+      if (view === 'dashboard') {
+        viewDashboard.classList.remove('hidden');
+      } else if (view === 'reports') {
+        viewReports.classList.remove('hidden');
+      } else if (view === 'calendar') {
+        viewCalendar.classList.remove('hidden');
+      } else {
+        viewList.classList.remove('hidden');
+      }
+    }
 
     navItems.forEach(item => {
       item.addEventListener('click', (e) => {
@@ -378,31 +753,142 @@
         navItems.forEach(n => n.classList.remove('active'));
         item.classList.add('active');
         currentView = item.getAttribute('data-view');
-        titleEl.textContent = VIEW_CONFIG[currentView]?.label || 'Dashboard Overview';
+        titleEl.textContent = VIEW_CONFIG[currentView]?.label || VIEW_TITLES[currentView] || 'Dashboard Overview';
 
         if (currentView === 'dashboard') {
-          viewDashboard.classList.remove('hidden');
-          viewList.classList.add('hidden');
+          setViewVisibility('dashboard');
           loadDashboardStats();
+        } else if (currentView === 'reports') {
+          setViewVisibility('reports');
+          loadReportTab(currentReportTab);
+        } else if (currentView === 'calendar') {
+          setViewVisibility('calendar');
+          loadCalendarEvents();
         } else {
-          viewDashboard.classList.add('hidden');
-          viewList.classList.remove('hidden');
+          setViewVisibility('list');
           document.getElementById('list-heading').textContent = VIEW_CONFIG[currentView].label;
           loadListData(currentView);
         }
       });
     });
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[char]);
+    }
+
+    function formatCurrency(value) {
+      if (value === null || value === undefined || value === '') return '-';
+      const number = Number(value);
+      if (Number.isNaN(number)) return `$${value}`;
+      return `$${number.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+    }
+
+    function normalizeFieldValue(field, value) {
+      if (value === null || value === undefined) return '';
+      if (field.type === 'datetime-local') {
+        const date = new Date(value);
+        if (!Number.isNaN(date.getTime())) {
+          const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+          return local.toISOString().slice(0, 16);
+        }
+      }
+      if (typeof value === 'boolean') return value ? 'true' : 'false';
+      return value;
+    }
+
+    function renderBadge(status) {
+      if (!status) return '-';
+      const good = ['active','paid','done','completed','accepted','signed','converted'];
+      const bad  = ['overdue','cancelled','declined','expired'];
+      const cls  = good.includes(status) ? 'badge-success'
+                 : bad.includes(status)  ? 'badge-danger'
+                 : 'badge-warning';
+      return `<span class="badge ${cls}">${escapeHtml(String(status).replace(/_/g, ' ').toUpperCase())}</span>`;
+    }
+
+    function renderKeyValueTable(obj) {
+      const entries = Object.entries(obj || {}).filter(([, value]) => !Array.isArray(value) && !(value !== null && typeof value === 'object'));
+      if (!entries.length) return '<div class="reports-empty">No report data available.</div>';
+      return `
+        <div class="table-container">
+          <table class="table">
+            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+            <tbody>
+              ${entries.map(([key, value]) => `
+                <tr>
+                  <td>${escapeHtml(key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))}</td>
+                  <td>${escapeHtml(String(value))}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function renderArrayTable(rows) {
+      if (!rows.length) return '<div class="reports-empty">No report rows available.</div>';
+      const columns = Object.keys(rows[0]);
+      return `
+        <div class="table-container">
+          <table class="table">
+            <thead><tr>${columns.map(col => `<th>${escapeHtml(col.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))}</th>`).join('')}</tr></thead>
+            <tbody>
+              ${rows.map(row => `<tr>${columns.map(col => `<td>${escapeHtml(String(row[col] ?? '-'))}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
     // ── Dashboard stats ──────────────────────────────────────────────────────
     async function loadDashboardStats() {
       try {
         const data = await api.getDashboardSummary();
-        if (data) {
-          document.getElementById('stat-projects').textContent = data.projects ?? 0;
-          document.getElementById('stat-tasks').textContent    = data.tasks    ?? 0;
-          document.getElementById('stat-invoices').textContent = data.invoices ?? 0;
-          document.getElementById('stat-expenses').textContent = data.expenses ?? 0;
-        }
+        if (!data) return;
+
+        document.getElementById('stat-projects').textContent = data.projects ?? 0;
+        document.getElementById('stat-tasks').textContent = data.tasks ?? 0;
+        document.getElementById('stat-invoices').textContent = data.invoices ?? 0;
+        document.getElementById('stat-expenses').textContent = data.expenses ?? 0;
+        document.getElementById('stat-revenue').textContent = formatCurrency(data.revenue_this_month);
+        document.getElementById('stat-revenue-delta').textContent = `Δ ${data.revenue_delta_pct ?? 0}% vs last month`;
+        document.getElementById('stat-outstanding').textContent = formatCurrency(data.outstanding_amount);
+        document.getElementById('stat-overdue').textContent = data.overdue_invoices ?? 0;
+        document.getElementById('stat-contracts-expiring').textContent = data.contracts_expiring_soon ?? 0;
+
+        const deadlinesBody = document.getElementById('deadlines-body');
+        const deadlines = Array.isArray(data.upcoming_deadlines) ? data.upcoming_deadlines : [];
+        deadlinesBody.innerHTML = deadlines.length
+          ? deadlines.map(item => `
+              <tr>
+                <td>${renderBadge(item.type)}</td>
+                <td>${escapeHtml(item.title || '-')}</td>
+                <td>${escapeHtml(item.due || '-')}</td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="3" class="text-center muted-copy">No upcoming deadlines.</td></tr>';
+
+        const recentClients = Array.isArray(data.recent_clients) ? data.recent_clients : [];
+        const recentList = document.getElementById('recent-clients-list');
+        recentList.innerHTML = recentClients.length
+          ? recentClients.map(client => `
+              <li class="recent-client-item">
+                <strong>${escapeHtml(client.name || 'Unnamed Client')}</strong>
+                <span class="muted-copy">Added ${escapeHtml(client.created_at || '-')}</span>
+              </li>
+            `).join('')
+          : '<li class="muted-copy">No recent clients found.</li>';
       } catch (err) {
         showAlert('Failed to load dashboard statistics.', 'error');
       }
@@ -428,6 +914,7 @@
       try {
         const res = await cfg.fetchList();
         const records = Array.isArray(res) ? res : (res.results || []);
+        cachedRecords[type] = records;
         tBody.innerHTML = '';
 
         if (records.length === 0) {
@@ -443,99 +930,89 @@
             tr.appendChild(td);
           });
 
-          // Actions cell
           const tdAct = document.createElement('td');
-          const editBtn = document.createElement('button');
-          editBtn.className = 'tbl-btn tbl-btn-edit';
-          editBtn.textContent = 'Edit';
-          editBtn.addEventListener('click', () => openEditModal(type, record.id || record.uuid));
+          if (cfg.update) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'tbl-btn tbl-btn-edit';
+            editBtn.textContent = 'Edit';
+            editBtn.addEventListener('click', () => openEditModal(type, record.id || record.uuid));
+            tdAct.appendChild(editBtn);
+          }
 
-          const delBtn = document.createElement('button');
-          delBtn.className = 'tbl-btn tbl-btn-delete';
-          delBtn.textContent = 'Delete';
-          delBtn.addEventListener('click', () => confirmDelete(type, record.id || record.uuid));
+          if (cfg.remove) {
+            const delBtn = document.createElement('button');
+            delBtn.className = 'tbl-btn tbl-btn-delete';
+            delBtn.textContent = 'Delete';
+            delBtn.addEventListener('click', () => confirmDelete(type, record.id || record.uuid));
+            tdAct.appendChild(delBtn);
+          }
 
-          tdAct.appendChild(editBtn);
-          tdAct.appendChild(delBtn);
           tr.appendChild(tdAct);
           tBody.appendChild(tr);
         });
       } catch (err) {
-        tBody.innerHTML = `<tr><td colspan="${cfg.columns.length}" class="text-center text-danger">Failed to load data: ${err.message}</td></tr>`;
+        tBody.innerHTML = `<tr><td colspan="${cfg.columns.length}" class="text-center text-danger">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
       }
     }
 
     // ── Modal helpers ────────────────────────────────────────────────────────
     const overlay = document.getElementById('modal-overlay');
     const modalTitle = document.getElementById('modal-title');
-    const modalBody  = document.getElementById('modal-body');
-    const modalSave  = document.getElementById('modal-save');
+    const modalBody = document.getElementById('modal-body');
+    const modalSave = document.getElementById('modal-save');
 
     function closeModal() {
       overlay.classList.remove('open');
       editingId = null;
     }
+
     document.getElementById('modal-close').addEventListener('click', closeModal);
     document.getElementById('modal-cancel').addEventListener('click', closeModal);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
 
-    // Fix: only use cached options if they were successfully loaded (non-empty).
-    // If _loadedOptions is null/undefined or an empty array (failed/never fetched),
-    // always re-fetch so dropdowns like Client are never permanently stuck empty.
     async function loadAsyncOptions(fields) {
-      for (const f of fields) {
-        if (f.asyncOptions && !(f._loadedOptions && f._loadedOptions.length > 0)) {
+      for (const field of fields) {
+        if (field.asyncOptions && !(field._loadedOptions && field._loadedOptions.length > 0)) {
           try {
-            const result = await f.asyncOptions();
-            // Only cache if we actually got data back
-            if (result && result.length > 0) {
-              f._loadedOptions = result;
-            } else {
-              f._loadedOptions = null; // keep null so we retry next time
-            }
+            const result = await field.asyncOptions();
+            field._loadedOptions = result && result.length > 0 ? result : null;
           } catch (e) {
-            f._loadedOptions = null; // don't cache failures — retry on next open
-            console.warn(`Failed to load options for ${f.name}:`, e);
+            field._loadedOptions = null;
+            console.warn(`Failed to load options for ${field.name}:`, e);
           }
         }
       }
     }
 
     function buildForm(fields, data = {}) {
-      return fields.map(f => {
-        const val = data[f.name] ?? '';
-        if (f.type === 'select') {
-          let opts;
-          if (f._loadedOptions) {
-            opts = f._loadedOptions.map(o =>
-              `<option value="${o.value}" ${String(val) === String(o.value) ? 'selected' : ''}>${o.label}</option>`
-            ).join('');
-          } else if (f.options) {
-            opts = f.options.map(o =>
-              `<option value="${o}" ${val === o ? 'selected' : ''}>${o.replace('_',' ').toUpperCase()}</option>`
-            ).join('');
-          } else {
-            opts = '';
+      return fields.map(field => {
+        const val = normalizeFieldValue(field, data[field.name]);
+        if (field.type === 'select') {
+          let opts = '';
+          if (field._loadedOptions) {
+            opts = field._loadedOptions.map(option => `<option value="${option.value}" ${String(val) === String(option.value) ? 'selected' : ''}>${escapeHtml(option.label)}</option>`).join('');
+          } else if (field.options) {
+            opts = field.options.map(option => `<option value="${option}" ${String(val) === String(option) ? 'selected' : ''}>${escapeHtml(option.replace(/_/g, ' ').toUpperCase())}</option>`).join('');
           }
           return `
             <div class="form-group">
-              <label class="form-label">${f.label}${f.required ? ' *' : ''}</label>
-              <select name="${f.name}">${opts}</select>
+              <label class="form-label">${escapeHtml(field.label)}${field.required ? ' *' : ''}</label>
+              <select name="${field.name}" ${field.required ? 'required' : ''}>${opts}</select>
             </div>`;
         }
         return `
           <div class="form-group">
-            <label class="form-label">${f.label}${f.required ? ' *' : ''}</label>
-            <input class="form-input" type="${f.type}" name="${f.name}" value="${val}" ${f.required ? 'required' : ''}>
+            <label class="form-label">${escapeHtml(field.label)}${field.required ? ' *' : ''}</label>
+            <input class="form-input" type="${field.type}" name="${field.name}" value="${escapeHtml(val)}" ${field.required ? 'required' : ''}>
           </div>`;
       }).join('');
     }
 
     function getFormData(fields) {
       const data = {};
-      fields.forEach(f => {
-        const el = modalBody.querySelector(`[name="${f.name}"]`);
-        if (el && el.value.trim() !== '') data[f.name] = el.value.trim();
+      fields.forEach(field => {
+        const el = modalBody.querySelector(`[name="${field.name}"]`);
+        if (el && el.value.trim() !== '') data[field.name] = el.value.trim();
       });
       return data;
     }
@@ -558,7 +1035,7 @@
         try {
           await cfg.create(payload);
           closeModal();
-          showAlert(`Created successfully!`, 'success');
+          showAlert('Created successfully!', 'success');
           loadListData(currentView);
         } catch (err) {
           showAlert(err.message, 'error');
@@ -578,7 +1055,11 @@
 
       try {
         await loadAsyncOptions(cfg.fields);
-        const record = await cfg.fetchOne(id);
+        const record = cfg.fetchOne
+          ? await cfg.fetchOne(id)
+          : (cachedRecords[type] || []).find(item => String(item.id || item.uuid) === String(id));
+
+        if (!record) throw new Error('Record not found');
         modalBody.innerHTML = buildForm(cfg.fields, record);
       } catch (err) {
         modalBody.innerHTML = `<p style="color:#ff6b7a;">Failed to load record.</p>`;
@@ -628,18 +1109,135 @@
       confirmOverlay.classList.add('open');
     }
 
-    // ── Badge helper ─────────────────────────────────────────────────────────
-    function renderBadge(status) {
-      if (!status) return '-';
-      const good = ['active','paid','done','completed'];
-      const bad  = ['overdue','cancelled'];
-      const cls  = good.includes(status) ? 'badge-success'
-                 : bad.includes(status)  ? 'badge-danger'
-                 : 'badge-warning';
-      return `<span class="badge ${cls}">${status.replace(/_/g,' ').toUpperCase()}</span>`;
+    // ── Reports view ─────────────────────────────────────────────────────────
+    const reportStartInput = document.getElementById('report-start-date');
+    const reportEndInput = document.getElementById('report-end-date');
+    const reportResults = document.getElementById('reports-results');
+    const reportDownloadBtn = document.getElementById('btn-download-report');
+
+    function getReportParams() {
+      const params = {};
+      if (reportStartInput.value) params.start_date = reportStartInput.value;
+      if (reportEndInput.value) params.end_date = reportEndInput.value;
+      return params;
     }
 
+    async function loadReportTab(tab) {
+      currentReportTab = tab;
+      document.querySelectorAll('[data-report-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-report-tab') === tab);
+      });
+      reportDownloadBtn.classList.toggle('hidden', !REPORT_TABS[tab].csvType);
+      reportResults.innerHTML = '<div class="reports-empty"><span class="spinner"></span> Loading report…</div>';
+
+      try {
+        const data = await REPORT_TABS[tab].fetch(getReportParams());
+        if (Array.isArray(data)) {
+          reportResults.innerHTML = renderArrayTable(data);
+          return;
+        }
+
+        const sections = [renderKeyValueTable(data)];
+        Object.entries(data || {}).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            sections.push(`<div><h4 class="mb-4">${escapeHtml(key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))}</h4>${renderArrayTable(value)}</div>`);
+          }
+        });
+        reportResults.innerHTML = sections.join('');
+      } catch (err) {
+        reportResults.innerHTML = `<div class="reports-empty text-danger">Failed to load report: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    document.querySelectorAll('[data-report-tab]').forEach(btn => {
+      btn.addEventListener('click', () => loadReportTab(btn.getAttribute('data-report-tab')));
+    });
+    reportStartInput.addEventListener('change', () => {
+      if (currentView === 'reports') loadReportTab(currentReportTab);
+    });
+    reportEndInput.addEventListener('change', () => {
+      if (currentView === 'reports') loadReportTab(currentReportTab);
+    });
+    reportDownloadBtn.addEventListener('click', async () => {
+      const cfg = REPORT_TABS[currentReportTab];
+      if (!cfg.csvType) return;
+      showSpinner(reportDownloadBtn);
+      try {
+        const { blob, filename } = await api.downloadReportCSV(cfg.csvType, getReportParams());
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename || `${cfg.csvType}_report.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        showAlert(err.message, 'error');
+      } finally {
+        hideSpinner(reportDownloadBtn);
+      }
+    });
+
+    // ── Calendar view ────────────────────────────────────────────────────────
+    const calendarBody = document.getElementById('calendar-events-body');
+    const calendarModeCopy = document.getElementById('calendar-mode-copy');
+
+    async function loadCalendarEvents() {
+      calendarBody.innerHTML = '<tr><td colspan="3" class="text-center"><span class="spinner"></span> Loading…</td></tr>';
+
+      try {
+        const res = await api.getCalendarEvents();
+        const events = Array.isArray(res) ? res : (res.results || []);
+        calendarBody.innerHTML = events.length
+          ? events.map(event => `
+              <tr>
+                <td>${escapeHtml(event.title || '-')}</td>
+                <td>${renderBadge(event.event_type)}</td>
+                <td>${escapeHtml(formatDateTime(event.start))}</td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="3" class="text-center muted-copy">No upcoming events.</td></tr>';
+      } catch (err) {
+        calendarBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Failed to load events: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    document.querySelectorAll('[data-calendar-mode]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentCalendarMode = btn.getAttribute('data-calendar-mode');
+        document.querySelectorAll('[data-calendar-mode]').forEach(el => {
+          el.classList.toggle('active', el === btn);
+        });
+        calendarModeCopy.textContent = currentCalendarMode === 'week'
+          ? 'Week mode selected. Upcoming events are still shown in a compact list.'
+          : 'Showing upcoming events in list view.';
+      });
+    });
+
+    document.getElementById('btn-add-event').addEventListener('click', async () => {
+      modalTitle.textContent = 'New Calendar Event';
+      modalBody.innerHTML = buildForm(CALENDAR_FIELDS, { all_day: 'false' });
+      overlay.classList.add('open');
+
+      modalSave.onclick = async () => {
+        const payload = getFormData(CALENDAR_FIELDS);
+        showSpinner(modalSave);
+        try {
+          await api.createCalendarEvent(payload);
+          closeModal();
+          showAlert('Event created successfully!', 'success');
+          loadCalendarEvents();
+        } catch (err) {
+          showAlert(err.message, 'error');
+        } finally {
+          hideSpinner(modalSave);
+        }
+      };
+    });
+
     // ── Init ─────────────────────────────────────────────────────────────────
+    setViewVisibility('dashboard');
     loadDashboardStats();
   });
   </script>

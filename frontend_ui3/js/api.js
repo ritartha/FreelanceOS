@@ -89,6 +89,52 @@ class ApiService {
     }
   }
 
+  async fetchBlob(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const headers = {
+      'Accept': options.accept || '*/*',
+      ...options.headers,
+    };
+
+    if (this.token) {
+      headers['Authorization'] = 'Bearer ' + this.token;
+    }
+
+    const config = { ...options, headers };
+    delete config.accept;
+
+    try {
+      const response = await window.fetch(url, config);
+
+      if (!response.ok) {
+        let message = `Request failed with HTTP ${response.status}`;
+        try {
+          const text = await response.text();
+          const data = text ? JSON.parse(text) : null;
+          message = data?.error?.message || data?.detail || message;
+        } catch (e) { }
+
+        if (response.status === 401 && this.token) {
+          this.clearSession();
+          window.location.href = 'index.html';
+        }
+
+        throw new Error(message);
+      }
+
+      return {
+        blob: await response.blob(),
+        filename: response.headers.get('Content-Disposition')?.match(/filename="?([^"]+)"?/)?.[1] || null,
+      };
+    } catch (error) {
+      console.error(`API Blob Error on ${endpoint}:`, error);
+      if (error.name === 'TypeError') {
+        throw new Error("Unable to connect to the server. Is the backend running?");
+      }
+      throw error;
+    }
+  }
+
   // Auth
   async login(email, password) {
     const data = await this.fetch('/auth/login/', { method: 'POST', body: JSON.stringify({ email, password }) });
@@ -166,6 +212,74 @@ class ApiService {
   async createInvoice(data) { return this.fetch('/invoices/', { method: 'POST', body: JSON.stringify(data) }); }
   async updateInvoice(id, data) { return this.fetch(`/invoices/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
   async deleteInvoice(id) { return this.fetch(`/invoices/${id}/`, { method: 'DELETE' }); }
+
+  // Quotations
+  async getQuotations(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/quotations/${qs ? '?' + qs : ''}`); }
+  async getQuotation(id) { return this.fetch(`/quotations/${id}/`); }
+  async createQuotation(data) { return this.fetch('/quotations/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updateQuotation(id, data) { return this.fetch(`/quotations/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deleteQuotation(id) { return this.fetch(`/quotations/${id}/`, { method: 'DELETE' }); }
+
+  // Contracts
+  async getContracts(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/contracts/${qs ? '?' + qs : ''}`); }
+  async getContract(id) { return this.fetch(`/contracts/${id}/`); }
+  async createContract(data) { return this.fetch('/contracts/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updateContract(id, data) { return this.fetch(`/contracts/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deleteContract(id) { return this.fetch(`/contracts/${id}/`, { method: 'DELETE' }); }
+
+  // Proposals
+  async getProposals(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/proposals/${qs ? '?' + qs : ''}`); }
+  async getProposal(id) { return this.fetch(`/proposals/${id}/`); }
+  async createProposal(data) { return this.fetch('/proposals/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updateProposal(id, data) { return this.fetch(`/proposals/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deleteProposal(id) { return this.fetch(`/proposals/${id}/`, { method: 'DELETE' }); }
+
+  // Time Logs
+  async getTimeLogs(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/time-logs/${qs ? '?' + qs : ''}`); }
+  async createTimeLog(data) { return this.fetch('/time-logs/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updateTimeLog(id, data) { return this.fetch(`/time-logs/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deleteTimeLog(id) { return this.fetch(`/time-logs/${id}/`, { method: 'DELETE' }); }
+
+  // Expenses
+  async getExpenses(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/expenses/${qs ? '?' + qs : ''}`); }
+  async getExpense(id) { return this.fetch(`/expenses/${id}/`); }
+  async createExpense(data) { return this.fetch('/expenses/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updateExpense(id, data) { return this.fetch(`/expenses/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deleteExpense(id) { return this.fetch(`/expenses/${id}/`, { method: 'DELETE' }); }
+
+  // Reports
+  async getRevenueReport(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/reports/revenue/${qs ? '?' + qs : ''}`); }
+  async getExpenseReport(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/reports/expenses/${qs ? '?' + qs : ''}`); }
+  async getProfitReport(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/reports/profit/${qs ? '?' + qs : ''}`); }
+  async getTopClients(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/reports/top-clients/${qs ? '?' + qs : ''}`); }
+  async getTaxSummary(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/reports/tax/${qs ? '?' + qs : ''}`); }
+  async downloadReportCSV(type, params = {}) {
+    const qs = new URLSearchParams({ type, ...params }).toString();
+    return this.fetchBlob(`/reports/export/csv/?${qs}`, { accept: 'text/csv' });
+  }
+
+  // Calendar
+  async getCalendarEvents(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/calendar/events/${qs ? '?' + qs : ''}`); }
+  async createCalendarEvent(data) { return this.fetch('/calendar/events/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updateCalendarEvent(id, data) { return this.fetch(`/calendar/events/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deleteCalendarEvent(id) { return this.fetch(`/calendar/events/${id}/`, { method: 'DELETE' }); }
+
+  // Portfolio
+  async getPortfolioItems(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/portfolio/items/${qs ? '?' + qs : ''}`); }
+  async getPortfolioItem(id) { return this.fetch(`/portfolio/items/${id}/`); }
+  async createPortfolioItem(data) { return this.fetch('/portfolio/items/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updatePortfolioItem(id, data) { return this.fetch(`/portfolio/items/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deletePortfolioItem(id) { return this.fetch(`/portfolio/items/${id}/`, { method: 'DELETE' }); }
+
+  // Notes
+  async getNotes(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/notes/${qs ? '?' + qs : ''}`); }
+  async createNote(data) { return this.fetch('/notes/', { method: 'POST', body: JSON.stringify(data) }); }
+  async updateNote(id, data) { return this.fetch(`/notes/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }); }
+  async deleteNote(id) { return this.fetch(`/notes/${id}/`, { method: 'DELETE' }); }
+
+  // Notifications
+  async getNotifications(params = {}) { const qs = new URLSearchParams(params).toString(); return this.fetch(`/notifications/${qs ? '?' + qs : ''}`); }
+  async markNotificationRead(id) { return this.fetch(`/notifications/${id}/`, { method: 'PATCH', body: JSON.stringify({ is_read: true }) }); }
 }
 
 const api = new ApiService();
@@ -181,14 +295,17 @@ function showAlert(message, type = 'error') {
 }
 
 function showSpinner(buttonEl) {
-  const originalText = buttonEl.innerHTML;
+  const originalText = buttonEl.textContent;
   buttonEl.setAttribute('data-original-text', originalText);
   buttonEl.disabled = true;
-  buttonEl.innerHTML = '<span class="spinner"></span>';
+  buttonEl.replaceChildren();
+  const spinner = document.createElement('span');
+  spinner.className = 'spinner';
+  buttonEl.appendChild(spinner);
 }
 
 function hideSpinner(buttonEl) {
   const originalText = buttonEl.getAttribute('data-original-text');
-  buttonEl.innerHTML = originalText;
+  buttonEl.replaceChildren(document.createTextNode(originalText || ''));
   buttonEl.disabled = false;
 }
