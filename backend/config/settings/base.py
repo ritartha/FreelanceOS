@@ -64,6 +64,7 @@ LOCAL_APPS = [
     "apps.notes",
     "apps.proposals",
     "apps.quotations",
+    "apps.contracts",
     "apps.projects",
     "apps.tasks",
     "apps.time_tracking",
@@ -276,6 +277,28 @@ CELERY_TASK_ROUTES = {
 }
 
 CELERY_TASK_DEFAULT_QUEUE = "default"
+
+# ── Celery Beat Schedule ──────────────────────────────────────────────────────
+from celery.schedules import crontab  # noqa: E402
+
+CELERY_BEAT_SCHEDULE = {
+    # Scans all active/signed contracts daily at 8 AM UTC and fires
+    # expiry-alert / renewal-reminder tasks for contracts hitting their window.
+    "contract-reminders-daily": {
+        "task": "apps.contracts.tasks.check_contract_reminders",
+        "schedule": crontab(hour=8, minute=0),
+    },
+    # Marks sent/partial invoices past due_date as overdue and sends reminders.
+    "overdue-invoices-daily": {
+        "task": "apps.invoices.tasks.check_overdue_invoices",
+        "schedule": crontab(hour=7, minute=0),
+    },
+    # Auto-generates Invoice instances from active RecurringInvoice templates.
+    "recurring-invoices-daily": {
+        "task": "apps.invoices.tasks.generate_recurring_invoices",
+        "schedule": crontab(hour=6, minute=0),
+    },
+}
 
 # =============================================================================
 # Email

@@ -1,11 +1,11 @@
 from rest_framework.routers import DefaultRouter
 
-from apps.invoices.api.views import InvoiceLineItemViewSet, InvoiceViewSet
+from apps.invoices.api.views import InvoiceViewSet, RecurringInvoiceViewSet
 
 app_name = "invoices"
 
 router = DefaultRouter()
+router.register("recurring", RecurringInvoiceViewSet, basename="recurring-invoice")
 router.register("", InvoiceViewSet, basename="invoice")
-router.register("line-items", InvoiceLineItemViewSet, basename="invoice-line-item")
 
 urlpatterns = router.urls

@@ -31,6 +31,7 @@ urlpatterns = [
     path("notes/", include("apps.notes.urls", namespace="notes")),
     path("proposals/", include("apps.proposals.urls", namespace="proposals")),
     path("quotations/", include("apps.quotations.urls", namespace="quotations")),
+    path("contracts/", include("apps.contracts.urls", namespace="contracts")),
     path("projects/", include("apps.projects.urls", namespace="projects")),
     path("tasks/", include("apps.tasks.urls", namespace="tasks")),
     path("time-tracking/", include("apps.time_tracking.urls", namespace="time-tracking")),

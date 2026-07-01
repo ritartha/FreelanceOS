@@ -18,6 +18,7 @@ urlpatterns = [
     path("proposals/", include("apps.proposals.api.urls", namespace="proposals")),
     path("", include("apps.proposals.api.public_urls", namespace="proposals-public")),
     path("quotations/", include("apps.quotations.api.urls", namespace="quotations")),
+    path("contracts/", include("apps.contracts.api.urls", namespace="contracts")),
     path("", include("apps.quotations.api.public_urls", namespace="quotations-public")),
     path("projects/", include("apps.projects.api.urls", namespace="projects")),
     path("tasks/", include("apps.tasks.api.urls", namespace="tasks")),
